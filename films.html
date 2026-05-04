@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Films — Louis Lamprecht</title>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' fill='%230e0e0e'/%3E%3Ctext x='32' y='50' font-family='Georgia,serif' font-size='46' font-weight='300' fill='%23c8b99a' text-anchor='middle' letter-spacing='2'%3ELL%3C/text%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --bg: #080705; --surface: #111009; --card: #151310; --text: #e6ddd0;
+    --muted: #7a6e62; --faint: #2a2520;
+    --accent: oklch(0.70 0.09 58);
+    --ff-display: 'Cormorant Garamond', serif;
+    --ff-mono: 'Space Mono', monospace;
+  }
+  html { scroll-behavior: smooth; }
+  body { background: var(--bg); color: var(--text); font-family: var(--ff-display); font-weight: 300; overflow-x: hidden; }
+
+  nav { position: fixed; top: 0; left: 0; right: 0; z-index: 100; display: flex; align-items: center; justify-content: space-between; padding: 2rem 3.5rem; }
+  nav::before { content: ''; position: absolute; inset: 0; background: linear-gradient(to bottom, rgba(8,7,5,0.92) 0%, transparent 100%); pointer-events: none; }
+  .nav-logo { text-decoration: none; display: flex; align-items: center; opacity: 0.92; transition: opacity 0.3s; }
+  .nav-logo:hover { opacity: 1; }
+  .nav-links { display: flex; gap: 2.8rem; list-style: none; position: relative; }
+  .nav-links a { font-family: var(--ff-mono); font-size: 0.62rem; letter-spacing: 0.28em; text-transform: uppercase; color: var(--muted); text-decoration: none; transition: color 0.3s; }
+  .nav-links a:hover { color: var(--text); }
+
+  .page-header { padding: 10rem 3.5rem 3rem; }
+  .page-title { font-size: clamp(2rem, 5vw, 3.5rem); font-weight: 300; letter-spacing: 0.05em; margin-bottom: 0.5rem; }
+  .page-sub { font-family: var(--ff-mono); font-size: 0.6rem; letter-spacing: 0.25em; text-transform: uppercase; color: var(--muted); }
+
+  .films-list { display: flex; flex-direction: column; padding: 0 3.5rem; }
+  .film-card { display: grid; grid-template-columns: 1fr 1fr; border-top: 1px solid var(--faint); cursor: pointer; transition: background 0.4s ease; }
+  .film-card:last-child { border-bottom: 1px solid var(--faint); }
+  .film-card:hover { background: var(--surface); }
+  .film-card-info { padding: 3.5rem 0; display: flex; flex-direction: column; justify-content: space-between; gap: 1.5rem; }
+  .film-tags { display: flex; gap: 1rem; align-items: center; }
+  .film-tag { font-family: var(--ff-mono); font-size: 0.55rem; letter-spacing: 0.3em; text-transform: uppercase; color: var(--muted); border: 1px solid var(--faint); padding: 0.3em 0.8em; }
+  .film-tag.accent { color: var(--accent); border-color: var(--accent); }
+  .film-title { font-size: clamp(2rem, 3.5vw, 3.2rem); font-weight: 300; line-height: 1.05; letter-spacing: -0.01em; margin-top: 1.5rem; }
+  .film-title em { font-style: italic; }
+  .film-desc { font-size: 1rem; line-height: 1.7; color: var(--muted); max-width: 38ch; font-weight: 300; }
+  .film-year { font-family: var(--ff-mono); font-size: 0.6rem; letter-spacing: 0.25em; color: var(--muted); }
+  .film-card-visual { display: flex; align-items: center; justify-content: flex-end; padding: 2rem 0 2rem 3rem; }
+  .film-thumb { width: 100%; aspect-ratio: 16/9; position: relative; overflow: hidden; display: flex; align-items: center; justify-content: center; }
+  .film-thumb::after { content: '\25b6'; position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-size: 2rem; color: rgba(230,221,208,0); background: rgba(8,7,5,0); transition: all 0.3s ease; pointer-events: none; }
+  .film-card:hover .film-thumb::after { color: rgba(230,221,208,0.9); background: rgba(8,7,5,0.4); }
+  .film-thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .film-placeholder-text { font-family: var(--ff-mono); font-size: 0.5rem; letter-spacing: 0.25em; color: var(--faint); text-transform: uppercase; text-align: center; line-height: 2; }
+  .film-card:nth-child(even) { direction: rtl; }
+  .film-card:nth-child(even) > * { direction: ltr; }
+  .film-card:nth-child(even) .film-card-visual { padding: 2rem 3rem 2rem 0; justify-content: flex-start; }
+  .ft-1 { background: linear-gradient(160deg, #1a1410 0%, #2a1f15 40%, #0e0c0a 100%); }
+  .ft-2 { background: linear-gradient(160deg, #10141a 0%, #151f2a 40%, #0a0e10 100%); }
+  .ft-3 { background: linear-gradient(160deg, #14100a 0%, #221a0e 50%, #0c0a08 100%); }
+
+  footer { display: flex; justify-content: space-between; align-items: center; padding: 3rem 3.5rem; border-top: 1px solid var(--faint); margin-top: 4rem; }
+  .footer-copy { font-family: var(--ff-mono); font-size: 0.55rem; letter-spacing: 0.2em; text-transform: uppercase; color: var(--faint); }
+
+  .nav-menu-btn { display: none; background: none; border: none; cursor: pointer; padding: 0.5rem; position: relative; z-index: 101; }
+  .nav-menu-btn span { display: block; width: 22px; height: 1px; background: var(--muted); margin: 5px 0; transition: all 0.3s; }
+  .nav-mobile-overlay { display: none; position: fixed; inset: 0; z-index: 99; background: rgba(8,7,5,0.98); flex-direction: column; align-items: center; justify-content: center; gap: 2.5rem; }
+  .nav-mobile-overlay.open { display: flex; }
+  .nav-mobile-overlay a { font-family: var(--ff-mono); font-size: 0.7rem; letter-spacing: 0.3em; text-transform: uppercase; color: var(--text); text-decoration: none; }
+  @media (max-width: 768px) {
+    nav { padding: 1.5rem 1.8rem; }
+    .nav-links { display: none; }
+    .nav-menu-btn { display: block; }
+    .page-header { padding: 8rem 1.8rem 2rem; }
+    .films-list { padding: 0 1.8rem; }
+    .film-card { grid-template-columns: 1fr; }
+    .film-card-visual { padding: 0 0 2rem 0 !important; justify-content: center !important; }
+    .film-card:nth-child(even) { direction: ltr; }
+    footer { padding: 2rem 1.8rem; }
+  }
+</style>
+</head>
+<body>
+
+<nav>
+  <a href="index.html" class="nav-logo" aria-label="Home"></a>
+  <ul class="nav-links">
+    <li><a href="index.html">Home</a></li>
+    <li><a href="films.html" style="color:var(--text);">Films</a></li>
+    <li><a href="gallery.html">Photography</a></li>
+    <li><a href="projects.html">Projects</a></li>
+    <li><a href="index.html#about">About</a></li>
+    <li><a href="index.html#contact">Contact</a></li>
+  </ul>
+  <button class="nav-menu-btn" id="nav-menu-btn" aria-label="Menu">
+    <span></span><span></span><span></span>
+  </button>
+</nav>
+
+<div class="nav-mobile-overlay" id="nav-mobile-overlay">
+  <a href="index.html" onclick="closeMobileNav()">Home</a>
+  <a href="films.html">Films</a>
+  <a href="gallery.html">Photography</a>
+  <a href="projects.html">Projects</a>
+  <a href="index.html#about" onclick="closeMobileNav()">About</a>
+  <a href="index.html#contact" onclick="closeMobileNav()">Contact</a>
+</div>
+
+<div class="page-header">
+  <h1 class="page-title">Films</h1>
+  <div class="page-sub" id="film-count"></div>
+</div>
+
+<div class="films-list" id="films-list"></div>
+
+<footer>
+  <span class="footer-copy" id="footer-name">&copy; 2026 Louis Lamprecht</span>
+</footer>
+
+<!-- VIDEO LIGHTBOX -->
+<div id="video-lightbox" style="display:none;position:fixed;inset:0;z-index:500;background:rgba(5,4,3,0.96);align-items:center;justify-content:center;flex-direction:column;">
+  <button id="lightbox-close" style="position:absolute;top:2rem;right:2rem;background:none;border:none;color:var(--muted);font-size:2rem;cursor:pointer;font-family:var(--ff-mono);line-height:1;">&times;</button>
+  <div id="lightbox-meta" style="font-family:var(--ff-mono);font-size:0.58rem;letter-spacing:0.3em;text-transform:uppercase;color:var(--muted);margin-bottom:1.5rem;text-align:center;"></div>
+  <div id="lightbox-frame" style="width:min(900px,92vw);aspect-ratio:16/9;background:#000;position:relative;">
+    <iframe id="lightbox-iframe" src="" frameborder="0" allow="autoplay;fullscreen" allowfullscreen style="width:100%;height:100%;display:block;"></iframe>
+  </div>
+  <div id="lightbox-no-video" style="display:none;width:min(900px,92vw);font-family:var(--ff-mono);font-size:0.6rem;letter-spacing:0.25em;text-transform:uppercase;color:var(--faint);text-align:center;padding:4rem 2rem;border:1px solid var(--faint);">No video link added yet.<br><span style="color:var(--muted);margin-top:0.8rem;display:block">Add one in Admin → Films</span></div>
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-storage-compat.js"></script>
+<script>
+const firebaseConfig = {
+  apiKey:            "AIzaSyCvcw4ItbhTG10cTVSQGJLoF74fjrKW1jc",
+  authDomain:        "portfolio-3acbc.firebaseapp.com",
+  projectId:         "portfolio-3acbc",
+  storageBucket:     "portfolio-3acbc.firebasestorage.app",
+  messagingSenderId: "869692298519",
+  appId:             "1:869692298519:web:0de40d2458f5bdb5d35352"
+};
+if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
+const DOC_REF = db.collection('portfolio').doc('main');
+const LS_KEY = 'll_portfolio';
+const DEFAULT_DATA = { info: { name: 'Louis Lamprecht' }, films: [] };
+
+function mergeWithDefaults(saved) {
+  return {
+    info:  { ...DEFAULT_DATA.info, ...(saved.info || {}) },
+    films: saved.films || DEFAULT_DATA.films
+  };
+}
+function loadData() {
+  try {
+    const raw = localStorage.getItem(LS_KEY);
+    if (raw) {
+      DOC_REF.get().then(doc => {
+        if (doc.exists && Object.keys(doc.data()).length > 0) {
+          localStorage.setItem(LS_KEY, JSON.stringify(doc.data()));
+        }
+      }).catch(() => {});
+      return mergeWithDefaults(JSON.parse(raw));
+    }
+  } catch {}
+  return DOC_REF.get().then(doc => {
+    if (doc.exists && Object.keys(doc.data()).length > 0) {
+      const d = mergeWithDefaults(doc.data());
+      localStorage.setItem(LS_KEY, JSON.stringify(doc.data()));
+      return d;
+    }
+    return JSON.parse(JSON.stringify(DEFAULT_DATA));
+  }).catch(() => JSON.parse(JSON.stringify(DEFAULT_DATA)));
+}
+
+(async () => {
+const data = await loadData();
+const isBlank = v => v == null || (typeof v === 'string' && (v.trim() === '' || v.trim() === '#'));
+
+document.getElementById('footer-name').textContent = `\u00a9 ${new Date().getFullYear()} ${data.info.name || 'Louis Lamprecht'}`;
+
+const countEl = document.getElementById('film-count');
+if (data.films && data.films.length > 0) countEl.textContent = `${data.films.length} film${data.films.length !== 1 ? 's' : ''}`;
+
+// Mobile nav
+const menuBtn = document.getElementById('nav-menu-btn');
+const overlay = document.getElementById('nav-mobile-overlay');
+menuBtn.addEventListener('click', () => overlay.classList.toggle('open'));
+window.closeMobileNav = () => overlay.classList.remove('open');
+
+// Video lightbox
+function getEmbedUrl(url) {
+  if (!url) return null;
+  const yt = url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/)([a-zA-Z0-9_-]+)/);
+  if (yt) return `https://www.youtube.com/embed/${yt[1]}?autoplay=1&rel=0`;
+  const vm = url.match(/vimeo\.com\/(\d+)/);
+  if (vm) return `https://player.vimeo.com/video/${vm[1]}?autoplay=1`;
+  return null;
+}
+const lightbox = document.getElementById('video-lightbox');
+const lbIframe = document.getElementById('lightbox-iframe');
+const lbFrame  = document.getElementById('lightbox-frame');
+const lbNoVideo = document.getElementById('lightbox-no-video');
+const lbMeta   = document.getElementById('lightbox-meta');
+
+function openLightbox(film) {
+  const embedUrl = getEmbedUrl(film.videoUrl);
+  const titleBits = [film.titleMain, film.titleItalic].filter(v => !isBlank(v)).join(' ');
+  const metaBits = [titleBits, film.type, film.year].filter(v => !isBlank(v));
+  lbMeta.textContent = metaBits.join('  \u00b7  ');
+  if (embedUrl) { lbIframe.src = embedUrl; lbFrame.style.display = 'block'; lbNoVideo.style.display = 'none'; }
+  else { lbIframe.src = ''; lbFrame.style.display = 'none'; lbNoVideo.style.display = 'block'; }
+  lightbox.style.display = 'flex';
+  document.body.style.overflow = 'hidden';
+}
+function closeLightbox() { lightbox.style.display = 'none'; lbIframe.src = ''; document.body.style.overflow = ''; }
+document.getElementById('lightbox-close').addEventListener('click', closeLightbox);
+lightbox.addEventListener('click', e => { if (e.target === lightbox) closeLightbox(); });
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closeLightbox(); });
+
+// Render films
+const gradients = ['ft-1','ft-2','ft-3'];
+const filmsList = document.getElementById('films-list');
+(data.films || []).forEach((film, i) => {
+  const gc = film.gradientClass || gradients[i % gradients.length];
+  const thumbHtml = film.thumb
+    ? `<img src="${film.thumb}" alt="${film.titleMain || ''} ${film.titleItalic || ''}" style="width:100%;height:100%;object-fit:cover;">`
+    : `<div class="film-placeholder-text">Film thumbnail<br>to be placed</div>`;
+
+  const tagsHtml = [
+    !isBlank(film.type) ? `<span class="film-tag accent">${film.type}</span>` : '',
+    !isBlank(film.year) ? `<span class="film-tag">${film.year}</span>` : ''
+  ].join('');
+
+  const titleParts = [];
+  if (!isBlank(film.titleMain))   titleParts.push(film.titleMain);
+  if (!isBlank(film.titleItalic)) titleParts.push(`<em>${film.titleItalic}</em>`);
+  const titleHtml = titleParts.length ? `<h2 class="film-title">${titleParts.join('<br>')}</h2>` : '';
+  const descHtml = !isBlank(film.desc) ? `<p class="film-desc">${film.desc}</p>` : '';
+  const metaParts = [];
+  if (!isBlank(film.duration)) metaParts.push(film.duration);
+  if (!isBlank(film.format))   metaParts.push(film.format);
+  const metaHtml = metaParts.length ? `<span class="film-year">${metaParts.join(' \u00b7 ')}</span>` : '';
+
+  const card = document.createElement('article');
+  card.className = 'film-card';
+  card.innerHTML = `
+    <div class="film-card-info">
+      <div>
+        ${tagsHtml ? `<div class="film-tags">${tagsHtml}</div>` : ''}
+        ${titleHtml}
+      </div>
+      ${descHtml}
+      ${metaHtml}
+    </div>
+    <div class="film-card-visual">
+      <div class="film-thumb ${gc}">${thumbHtml}</div>
+    </div>`;
+  card.addEventListener('click', () => openLightbox(film));
+  filmsList.appendChild(card);
+});
+
+})();
+</script>
+</body>
+</html>

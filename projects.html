@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Projects — Louis Lamprecht</title>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' fill='%230e0e0e'/%3E%3Ctext x='32' y='50' font-family='Georgia,serif' font-size='46' font-weight='300' fill='%23c8b99a' text-anchor='middle' letter-spacing='2'%3ELL%3C/text%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --bg: #080705; --surface: #111009; --card: #151310; --text: #e6ddd0;
+    --muted: #7a6e62; --faint: #2a2520;
+    --accent: oklch(0.70 0.09 58);
+    --ff-display: 'Cormorant Garamond', serif;
+    --ff-mono: 'Space Mono', monospace;
+  }
+  html { scroll-behavior: smooth; }
+  body { background: var(--bg); color: var(--text); font-family: var(--ff-display); font-weight: 300; overflow-x: hidden; }
+
+  nav { position: fixed; top: 0; left: 0; right: 0; z-index: 100; display: flex; align-items: center; justify-content: space-between; padding: 2rem 3.5rem; }
+  nav::before { content: ''; position: absolute; inset: 0; background: linear-gradient(to bottom, rgba(8,7,5,0.92) 0%, transparent 100%); pointer-events: none; }
+  .nav-logo { text-decoration: none; display: flex; align-items: center; opacity: 0.92; transition: opacity 0.3s; }
+  .nav-logo:hover { opacity: 1; }
+  .nav-links { display: flex; gap: 2.8rem; list-style: none; position: relative; }
+  .nav-links a { font-family: var(--ff-mono); font-size: 0.62rem; letter-spacing: 0.28em; text-transform: uppercase; color: var(--muted); text-decoration: none; transition: color 0.3s; }
+  .nav-links a:hover { color: var(--text); }
+
+  .page-header { padding: 10rem 3.5rem 3rem; }
+  .page-title { font-size: clamp(2rem, 5vw, 3.5rem); font-weight: 300; letter-spacing: 0.05em; margin-bottom: 0.5rem; }
+  .page-sub { font-family: var(--ff-mono); font-size: 0.6rem; letter-spacing: 0.25em; text-transform: uppercase; color: var(--muted); }
+
+  .projects-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); gap: 2rem; padding: 0 3.5rem; }
+  .project-card { background: var(--card); border: 1px solid var(--faint); overflow: hidden; transition: border-color 0.3s, transform 0.3s; }
+  .project-card:hover { border-color: var(--muted); transform: translateY(-2px); }
+  .project-card-img { width: 100%; aspect-ratio: 16/9; object-fit: cover; display: block; }
+  .project-card-placeholder { width: 100%; aspect-ratio: 16/9; background: var(--surface); display: flex; align-items: center; justify-content: center; font-family: var(--ff-mono); font-size: 0.55rem; letter-spacing: 0.2em; color: var(--faint); text-transform: uppercase; }
+  .project-card-body { padding: 1.5rem; }
+  .project-card-type { font-family: var(--ff-mono); font-size: 0.5rem; letter-spacing: 0.3em; text-transform: uppercase; color: var(--accent); margin-bottom: 0.6rem; }
+  .project-card-title { font-size: 1.4rem; font-weight: 300; line-height: 1.2; margin-bottom: 0.5rem; }
+  .project-card-date { font-family: var(--ff-mono); font-size: 0.52rem; letter-spacing: 0.2em; color: var(--muted); margin-bottom: 0.8rem; }
+  .project-card-desc { font-size: 0.95rem; line-height: 1.6; color: var(--muted); font-weight: 300; }
+  .project-card-link { display: inline-block; margin-top: 1rem; font-family: var(--ff-mono); font-size: 0.55rem; letter-spacing: 0.2em; text-transform: uppercase; color: var(--accent); text-decoration: none; transition: color 0.3s; }
+  .project-card-link:hover { color: var(--text); }
+
+  footer { display: flex; justify-content: space-between; align-items: center; padding: 3rem 3.5rem; border-top: 1px solid var(--faint); margin-top: 4rem; }
+  .footer-copy { font-family: var(--ff-mono); font-size: 0.55rem; letter-spacing: 0.2em; text-transform: uppercase; color: var(--faint); }
+
+  .nav-menu-btn { display: none; background: none; border: none; cursor: pointer; padding: 0.5rem; position: relative; z-index: 101; }
+  .nav-menu-btn span { display: block; width: 22px; height: 1px; background: var(--muted); margin: 5px 0; transition: all 0.3s; }
+  .nav-mobile-overlay { display: none; position: fixed; inset: 0; z-index: 99; background: rgba(8,7,5,0.98); flex-direction: column; align-items: center; justify-content: center; gap: 2.5rem; }
+  .nav-mobile-overlay.open { display: flex; }
+  .nav-mobile-overlay a { font-family: var(--ff-mono); font-size: 0.7rem; letter-spacing: 0.3em; text-transform: uppercase; color: var(--text); text-decoration: none; }
+  @media (max-width: 768px) {
+    nav { padding: 1.5rem 1.8rem; }
+    .nav-links { display: none; }
+    .nav-menu-btn { display: block; }
+    .page-header { padding: 8rem 1.8rem 2rem; }
+    .projects-grid { padding: 0 1.8rem; grid-template-columns: 1fr; }
+    footer { padding: 2rem 1.8rem; }
+  }
+</style>
+</head>
+<body>
+
+<nav>
+  <a href="index.html" class="nav-logo" aria-label="Home"></a>
+  <ul class="nav-links">
+    <li><a href="index.html">Home</a></li>
+    <li><a href="films.html">Films</a></li>
+    <li><a href="gallery.html">Photography</a></li>
+    <li><a href="projects.html" style="color:var(--text);">Projects</a></li>
+    <li><a href="index.html#about">About</a></li>
+    <li><a href="index.html#contact">Contact</a></li>
+  </ul>
+  <button class="nav-menu-btn" id="nav-menu-btn" aria-label="Menu">
+    <span></span><span></span><span></span>
+  </button>
+</nav>
+
+<div class="nav-mobile-overlay" id="nav-mobile-overlay">
+  <a href="index.html" onclick="closeMobileNav()">Home</a>
+  <a href="films.html">Films</a>
+  <a href="gallery.html">Photography</a>
+  <a href="projects.html">Projects</a>
+  <a href="index.html#about" onclick="closeMobileNav()">About</a>
+  <a href="index.html#contact" onclick="closeMobileNav()">Contact</a>
+</div>
+
+<div class="page-header">
+  <h1 class="page-title">Projects</h1>
+  <div class="page-sub" id="project-count"></div>
+</div>
+
+<div class="projects-grid" id="projects-grid"></div>
+
+<footer>
+  <span class="footer-copy" id="footer-name">&copy; 2026 Louis Lamprecht</span>
+</footer>
+
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-storage-compat.js"></script>
+<script>
+const firebaseConfig = {
+  apiKey:            "AIzaSyCvcw4ItbhTG10cTVSQGJLoF74fjrKW1jc",
+  authDomain:        "portfolio-3acbc.firebaseapp.com",
+  projectId:         "portfolio-3acbc",
+  storageBucket:     "portfolio-3acbc.firebasestorage.app",
+  messagingSenderId: "869692298519",
+  appId:             "1:869692298519:web:0de40d2458f5bdb5d35352"
+};
+if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
+const DOC_REF = db.collection('portfolio').doc('main');
+const LS_KEY = 'll_portfolio';
+const DEFAULT_DATA = { info: { name: 'Louis Lamprecht' }, projects: [] };
+const isBlank = v => v == null || (typeof v === 'string' && (v.trim() === '' || v.trim() === '#'));
+
+function mergeWithDefaults(saved) {
+  return {
+    info:     { ...DEFAULT_DATA.info, ...(saved.info || {}) },
+    projects: saved.projects || DEFAULT_DATA.projects
+  };
+}
+function loadData() {
+  try {
+    const raw = localStorage.getItem(LS_KEY);
+    if (raw) {
+      DOC_REF.get().then(doc => {
+        if (doc.exists && Object.keys(doc.data()).length > 0) {
+          localStorage.setItem(LS_KEY, JSON.stringify(doc.data()));
+        }
+      }).catch(() => {});
+      return mergeWithDefaults(JSON.parse(raw));
+    }
+  } catch {}
+  return DOC_REF.get().then(doc => {
+    if (doc.exists && Object.keys(doc.data()).length > 0) {
+      const d = mergeWithDefaults(doc.data());
+      localStorage.setItem(LS_KEY, JSON.stringify(doc.data()));
+      return d;
+    }
+    return JSON.parse(JSON.stringify(DEFAULT_DATA));
+  }).catch(() => JSON.parse(JSON.stringify(DEFAULT_DATA)));
+}
+
+(async () => {
+const data = await loadData();
+
+document.getElementById('footer-name').textContent = `\u00a9 ${new Date().getFullYear()} ${data.info.name || 'Louis Lamprecht'}`;
+
+// Mobile nav
+const menuBtn = document.getElementById('nav-menu-btn');
+const overlay = document.getElementById('nav-mobile-overlay');
+menuBtn.addEventListener('click', () => overlay.classList.toggle('open'));
+window.closeMobileNav = () => overlay.classList.remove('open');
+
+// Render projects
+const grid = document.getElementById('projects-grid');
+const projects = data.projects || [];
+const countEl = document.getElementById('project-count');
+if (projects.length > 0) countEl.textContent = `${projects.length} project${projects.length !== 1 ? 's' : ''}`;
+
+projects.forEach(prj => {
+  const card = document.createElement('div');
+  card.className = 'project-card';
+
+  const imgHtml = prj.image
+    ? `<img class="project-card-img" src="${prj.image}" alt="${prj.title || ''}">`
+    : `<div class="project-card-placeholder">Project</div>`;
+
+  const parts = [];
+  if (!isBlank(prj.type)) parts.push(`<div class="project-card-type">${prj.type}</div>`);
+  parts.push(`<div class="project-card-title">${prj.title || 'Untitled'}</div>`);
+  if (!isBlank(prj.date)) parts.push(`<div class="project-card-date">${prj.date}</div>`);
+  if (!isBlank(prj.desc)) parts.push(`<div class="project-card-desc">${prj.desc}</div>`);
+  if (!isBlank(prj.link)) parts.push(`<a class="project-card-link" href="${prj.link}" target="_blank">View Project →</a>`);
+
+  card.innerHTML = `${imgHtml}<div class="project-card-body">${parts.join('')}</div>`;
+
+  if (prj.link && !isBlank(prj.link)) {
+    card.style.cursor = 'pointer';
+    card.addEventListener('click', e => {
+      if (e.target.tagName !== 'A') window.open(prj.link, '_blank');
+    });
+  }
+
+  grid.appendChild(card);
+});
+
+if (projects.length === 0) {
+  grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:4rem 0;font-family:var(--ff-mono);font-size:0.6rem;letter-spacing:0.2em;color:var(--faint);text-transform:uppercase;">Projects coming soon</div>';
+}
+
+})();
+</script>
+</body>
+</html>

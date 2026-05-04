@@ -1,0 +1,1619 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Admin — Louis Lamprecht</title>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' fill='%230e0e0e'/%3E%3Ctext x='32' y='50' font-family='Georgia,serif' font-size='46' font-weight='300' fill='%23c8b99a' text-anchor='middle' letter-spacing='2'%3ELL%3C/text%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --bg: #080705; --surface: #0f0e0b; --card: #161410;
+    --border: #252018; --border2: #302a22;
+    --text: #e6ddd0; --muted: #7a6e62; --faint: #3a3228;
+    --accent: oklch(0.70 0.09 58);
+    --danger: oklch(0.65 0.12 20);
+    --success: oklch(0.65 0.10 145);
+    --ff: 'Space Mono', monospace;
+    --ffd: 'Cormorant Garamond', serif;
+  }
+  html, body { height: 100%; }
+  body { background: var(--bg); color: var(--text); font-family: var(--ff); font-size: 0.75rem; display: flex; flex-direction: column; }
+
+  /* ── TOPBAR ─── */
+  .topbar {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 0 2rem; height: 56px; border-bottom: 1px solid var(--border);
+    background: var(--surface); flex-shrink: 0; position: sticky; top: 0; z-index: 50;
+  }
+  .topbar-brand { font-family: var(--ffd); font-size: 1.1rem; font-weight: 300; letter-spacing: 0.05em; }
+  .topbar-brand span { color: var(--muted); }
+  .topbar-actions { display: flex; gap: 0.75rem; align-items: center; }
+  .btn { font-family: var(--ff); font-size: 0.65rem; letter-spacing: 0.2em; text-transform: uppercase; padding: 0.55em 1.2em; border: 1px solid var(--border2); background: none; color: var(--muted); cursor: pointer; transition: all 0.2s; text-decoration: none; display: inline-flex; align-items: center; gap: 0.5em; }
+  .btn:hover { border-color: var(--muted); color: var(--text); }
+  .btn.primary { background: var(--accent); border-color: var(--accent); color: #080705; }
+  .btn.primary:hover { opacity: 0.85; }
+  .btn.danger { border-color: var(--danger); color: var(--danger); }
+  .btn.danger:hover { background: var(--danger); color: #fff; }
+
+  /* ── LAYOUT ─── */
+  .layout { display: flex; flex: 1; overflow: hidden; }
+
+  /* ── SIDEBAR ─── */
+  .sidebar {
+    width: 200px; flex-shrink: 0; border-right: 1px solid var(--border);
+    background: var(--surface); padding: 1.5rem 0; overflow-y: auto;
+  }
+  .sidebar-section { padding: 0.4rem 1.5rem; font-size: 0.5rem; letter-spacing: 0.3em; text-transform: uppercase; color: var(--faint); margin-bottom: 0.3rem; margin-top: 1rem; }
+  .sidebar-item {
+    display: block; padding: 0.7rem 1.5rem; font-size: 0.65rem; letter-spacing: 0.15em;
+    text-transform: uppercase; color: var(--muted); cursor: pointer; border: none;
+    background: none; width: 100%; text-align: left; transition: all 0.15s; border-left: 2px solid transparent;
+    font-family: var(--ff);
+  }
+  .sidebar-item:hover { color: var(--text); background: rgba(255,255,255,0.03); }
+  .sidebar-item.active { color: var(--accent); border-left-color: var(--accent); background: rgba(255,255,255,0.03); }
+
+  /* ── MAIN ─── */
+  .main { flex: 1; overflow-y: auto; padding: 2.5rem; }
+
+  /* ── PANELS ─── */
+  .panel { display: none; }
+  .panel.active { display: block; }
+
+  .panel-title { font-family: var(--ffd); font-size: 2rem; font-weight: 300; margin-bottom: 0.5rem; }
+  .panel-sub { color: var(--muted); font-size: 0.6rem; letter-spacing: 0.2em; text-transform: uppercase; margin-bottom: 2.5rem; }
+
+  /* ── FORM ─── */
+  .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 2rem; }
+  .form-grid.single { grid-template-columns: 1fr; }
+  .form-group { display: flex; flex-direction: column; gap: 0.4rem; }
+  .form-group.full { grid-column: 1 / -1; }
+  label { font-size: 0.55rem; letter-spacing: 0.25em; text-transform: uppercase; color: var(--muted); }
+  input[type=text], input[type=email], input[type=url], textarea, select {
+    background: var(--card); border: 1px solid var(--border2); color: var(--text);
+    font-family: var(--ff); font-size: 0.7rem; padding: 0.7em 0.9em;
+    outline: none; transition: border-color 0.2s; width: 100%; resize: vertical;
+  }
+  input:focus, textarea:focus, select:focus { border-color: var(--accent); }
+  textarea { min-height: 80px; }
+  select option { background: var(--card); }
+
+  /* ── UPLOAD ─── */
+  .upload-area {
+    border: 1px dashed var(--border2); padding: 2rem 1rem; text-align: center;
+    cursor: pointer; transition: border-color 0.2s; position: relative; background: var(--card);
+  }
+  .upload-area:hover { border-color: var(--accent); }
+  .upload-area input[type=file] { position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%; }
+  .upload-label { color: var(--muted); font-size: 0.6rem; letter-spacing: 0.2em; text-transform: uppercase; }
+  .upload-preview { max-width: 100%; max-height: 180px; object-fit: contain; margin-top: 0.8rem; display: none; }
+  .upload-preview.show { display: block; }
+  .upload-filename { color: var(--accent); font-size: 0.6rem; margin-top: 0.5rem; }
+
+  /* ── SECTION DIVIDER ─── */
+  .divider { border: none; border-top: 1px solid var(--border); margin: 2rem 0; }
+  h3.sub { font-family: var(--ffd); font-size: 1.2rem; font-weight: 300; margin-bottom: 1.2rem; }
+
+  /* ── CARDS LIST ─── */
+  .item-list { display: flex; flex-direction: column; gap: 0.5rem; margin-bottom: 1.5rem; }
+  .item-row {
+    display: flex; align-items: center; gap: 1rem; padding: 1rem 1.2rem;
+    background: var(--card); border: 1px solid var(--border); transition: border-color 0.2s;
+  }
+  .item-row:hover { border-color: var(--border2); }
+  .item-row-thumb {
+    width: 80px; height: 46px; object-fit: cover; background: var(--surface);
+    flex-shrink: 0; display: flex; align-items: center; justify-content: center;
+    font-size: 0.5rem; color: var(--faint); letter-spacing: 0.15em;
+  }
+  .item-row-thumb img { width: 100%; height: 100%; object-fit: cover; }
+  .item-row-thumb.photo-sq { width: 46px; height: 46px; }
+  .item-row-info { flex: 1; min-width: 0; }
+  .item-row-title { font-family: var(--ffd); font-size: 1rem; font-weight: 300; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .item-row-meta { font-size: 0.55rem; letter-spacing: 0.2em; text-transform: uppercase; color: var(--muted); margin-top: 0.2rem; }
+  .item-row-actions { display: flex; gap: 0.4rem; flex-shrink: 0; }
+  .drag-handle { color: var(--faint); cursor: grab; user-select: none; padding: 0 0.3rem; font-size: 0.9rem; }
+
+  /* ── MODAL ─── */
+  .modal-backdrop {
+    position: fixed; inset: 0; background: rgba(5,4,3,0.88); z-index: 200;
+    display: flex; align-items: center; justify-content: center; padding: 2rem;
+    opacity: 0; pointer-events: none; transition: opacity 0.25s;
+  }
+  .modal-backdrop.open { opacity: 1; pointer-events: all; }
+  .modal {
+    background: var(--surface); border: 1px solid var(--border2);
+    width: 100%; max-width: 680px; max-height: 90vh; overflow-y: auto;
+    padding: 2rem; transform: translateY(12px); transition: transform 0.25s;
+  }
+  .modal-backdrop.open .modal { transform: translateY(0); }
+  .modal-header { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 1.5rem; }
+  .modal-title { font-family: var(--ffd); font-size: 1.4rem; font-weight: 300; }
+  .modal-close { background: none; border: none; color: var(--muted); font-size: 1.2rem; cursor: pointer; padding: 0; }
+  .modal-footer { display: flex; justify-content: flex-end; gap: 0.75rem; margin-top: 1.5rem; padding-top: 1.5rem; border-top: 1px solid var(--border); }
+
+  /* ── TOAST ─── */
+  #toast {
+    position: fixed; bottom: 2rem; left: 50%; transform: translateX(-50%) translateY(10px);
+    background: var(--success); color: #080705; padding: 0.7em 1.6em;
+    font-size: 0.62rem; letter-spacing: 0.2em; text-transform: uppercase;
+    opacity: 0; transition: opacity 0.3s, transform 0.3s; pointer-events: none; z-index: 999;
+  }
+  #toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+  /* ── LOGIN ─── */
+  #login-screen {
+    position: fixed; inset: 0; z-index: 500; background: #050403;
+    display: flex; align-items: center; justify-content: center; flex-direction: column; gap: 0;
+  }
+  #login-screen.hidden { display: none; }
+  .login-box { width: 320px; }
+  .login-title { font-family: var(--ffd); font-size: 1.8rem; font-weight: 300; margin-bottom: 0.3rem; }
+  .login-sub { font-size: 0.55rem; letter-spacing: 0.3em; text-transform: uppercase; color: var(--muted); margin-bottom: 2rem; }
+  .login-error { font-size: 0.58rem; letter-spacing: 0.2em; color: var(--danger); margin-top: 0.5rem; min-height: 1em; }
+  .login-box input[type=password] {
+    width: 100%; background: var(--card); border: 1px solid var(--border2); color: var(--text);
+    font-family: var(--ff); font-size: 0.75rem; padding: 0.8em 1em; outline: none;
+    transition: border-color 0.2s; margin-bottom: 0.8rem;
+  }
+  .login-box input[type=password]:focus { border-color: var(--accent); }
+  .login-hint { font-size: 0.52rem; letter-spacing: 0.18em; color: var(--faint); margin-top: 1.5rem; }
+</style>
+</head>
+<body>
+
+<!-- LOGIN SCREEN -->
+<div id="login-screen">
+  <div class="login-box">
+    <div class="login-title">Louis Lamprecht</div>
+    <div class="login-sub">Admin Access</div>
+    <input type="email" id="login-email" placeholder="Email" autocomplete="username" style="margin-bottom:0.75rem">
+    <input type="password" id="login-input" placeholder="Password" autocomplete="current-password">
+    <button class="btn primary" id="login-btn" style="width:100%">Enter</button>
+    <div class="login-error" id="login-error"></div>
+    <div class="login-hint"></div>
+  </div>
+</div>
+
+<!-- TOPBAR -->
+<div class="topbar">
+  <div class="topbar-brand">Louis Lamprecht <span>/ Admin</span></div>
+  <div class="topbar-actions">
+    <a href="index.html" class="btn">↗ View Portfolio</a>
+    <button class="btn primary" id="save-btn">Save All Changes</button>
+  </div>
+</div>
+
+<div class="layout">
+  <!-- SIDEBAR -->
+  <nav class="sidebar">
+    <div class="sidebar-section">Site</div>
+    <button class="sidebar-item active" data-panel="info">Info &amp; Bio</button>
+    <button class="sidebar-item" data-panel="contact">Contact</button>
+    <div class="sidebar-section">Work</div>
+    <button class="sidebar-item" data-panel="films">Films</button>
+    <button class="sidebar-item" data-panel="photos">Photography</button>
+    <button class="sidebar-item" data-panel="projects">Projects</button>
+    <button class="sidebar-item" data-panel="awards">Awards &amp; Press</button>
+  </nav>
+
+  <!-- MAIN -->
+  <main class="main">
+
+    <!-- INFO PANEL -->
+    <div class="panel active" id="panel-info">
+      <div class="panel-title">Info &amp; Bio</div>
+      <div class="panel-sub">Basic site information and biography</div>
+
+      <div class="form-grid">
+        <div class="form-group">
+          <label>Full Name</label>
+          <input type="text" id="info-name" placeholder="Louis Lamprecht">
+        </div>
+        <div class="form-group">
+          <label>Tagline</label>
+          <input type="text" id="info-tagline" placeholder="Documentary · Film · Photography">
+        </div>
+        <div class="form-group full">
+          <label>Biography (first paragraph)</label>
+          <textarea id="info-bio" rows="4"></textarea>
+        </div>
+        <div class="form-group full">
+          <label>Biography (second paragraph)</label>
+          <textarea id="info-bio2" rows="3"></textarea>
+        </div>
+        <div class="form-group full">
+          <label>Discipline Tags</label>
+          <div id="disciplines-list" style="display:flex;flex-wrap:wrap;gap:0.4rem;margin-bottom:0.6rem;min-height:2rem;"></div>
+          <div style="display:flex;gap:0.5rem;">
+            <input type="text" id="discipline-input" placeholder="e.g. Sports Media" style="flex:1">
+            <button class="btn" id="discipline-add-btn" type="button">+ Add</button>
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Films Count</label>
+          <input type="text" id="info-stat-films" placeholder="12+">
+        </div>
+        <div class="form-group">
+          <label>Festivals Count</label>
+          <input type="text" id="info-stat-festivals" placeholder="6">
+        </div>
+        <div class="form-group">
+          <label>Showreel URL (YouTube or Vimeo)</label>
+          <input type="url" id="info-showreel" placeholder="https://vimeo.com/123456">
+        </div>
+        <div class="form-group">
+          <label>Images Count</label>
+          <input type="text" id="info-stat-images" placeholder="200+">
+        </div>
+      </div>
+
+      <hr class="divider">
+      <h3 class="sub">Hero Background Photo</h3>
+      <div class="upload-area" id="hero-bg-upload-area">
+        <input type="file" accept="image/*" id="hero-bg-file">
+        <div class="upload-label">Click to upload hero background image (landscape recommended)</div>
+        <img class="upload-preview" id="hero-bg-preview" alt="Hero background preview">
+        <div class="upload-filename" id="hero-bg-filename"></div>
+      </div>
+      <div id="hero-bg-focal-wrap" style="display:none;margin-top:0.8rem;">
+        <div class="tp-label" style="margin-top:0">Drag to reposition the hero background</div>
+        <div id="hero-crop-container" style="position:relative;width:100%;aspect-ratio:16/9;overflow:hidden;border:1px solid var(--faint);cursor:grab;background:var(--card);">
+          <img id="hero-crop-img" style="position:absolute;pointer-events:none;user-select:none;" draggable="false">
+        </div>
+        <div style="font-size:0.52rem;letter-spacing:0.2em;color:var(--muted);margin-top:0.4rem;" id="focal-label">Position: center</div>
+        <input type="hidden" id="hero-crop-hidden" value="50% 50%">
+      </div>
+      <button class="btn danger" id="hero-bg-clear" style="margin-top:0.5rem;display:none">Remove Background</button>
+
+      <hr class="divider">
+      <h3 class="sub">Portrait Photo</h3>
+      <div class="upload-area" id="portrait-upload-area">
+        <input type="file" accept="image/*" id="portrait-file">
+        <div class="upload-label">Click to upload portrait photo</div>
+        <img class="upload-preview" id="portrait-preview" alt="Portrait preview">
+        <div class="upload-filename" id="portrait-filename"></div>
+      </div>
+      <button class="btn danger" id="portrait-clear" style="margin-top:0.5rem;display:none">Remove Portrait</button>
+    </div>
+
+    <!-- CONTACT PANEL -->
+    <div class="panel" id="panel-contact">
+      <div class="panel-title">Contact</div>
+      <div class="panel-sub">Links shown in the contact section</div>
+      <div class="form-grid">
+        <div class="form-group">
+          <label>Email Address</label>
+          <input type="email" id="contact-email" placeholder="louis@louisl.com">
+        </div>
+        <div class="form-group">
+          <label>Vimeo URL</label>
+          <input type="url" id="contact-vimeo" placeholder="https://vimeo.com/yourname">
+        </div>
+        <div class="form-group">
+          <label>Instagram URL</label>
+          <input type="url" id="contact-instagram" placeholder="https://instagram.com/yourname">
+        </div>
+        <div class="form-group">
+          <label>IMDB URL</label>
+          <input type="url" id="contact-imdb" placeholder="https://imdb.com/name/...">
+        </div>
+      </div>
+    </div>
+
+    <!-- FILMS PANEL -->
+    <div class="panel" id="panel-films">
+      <div class="panel-title">Films</div>
+      <div class="panel-sub">Manage your film entries — drag to reorder</div>
+
+      <div style="margin-bottom:1.5rem;padding-bottom:1rem;border-bottom:1px solid var(--faint);">
+        <label style="font-family:var(--ff-mono);font-size:0.55rem;letter-spacing:0.15em;text-transform:uppercase;color:var(--muted);display:block;margin-bottom:0.5rem;">Homepage Slideshow</label>
+        <div style="font-size:0.8rem;color:var(--muted);margin-bottom:0.6rem;">Tick the films to show in the main page slideshow. If none are selected, all films are used.</div>
+        <div id="film-slideshow-selector" style="max-height:200px;overflow-y:auto;border:1px solid var(--faint);padding:0.5rem;"></div>
+      </div>
+
+      <div class="item-list" id="films-list"></div>
+      <button class="btn" id="add-film-btn">+ Add Film</button>
+    </div>
+
+    <!-- PHOTOS PANEL -->
+    <div class="panel" id="panel-photos">
+      <div class="panel-title">Photography</div>
+      <div class="panel-sub">Manage your photo entries — drag to reorder</div>
+
+      <div style="margin-bottom:1.5rem;padding-bottom:1rem;border-bottom:1px solid var(--faint);">
+        <label style="font-family:var(--ff-mono);font-size:0.55rem;letter-spacing:0.15em;text-transform:uppercase;color:var(--muted);display:block;margin-bottom:0.5rem;">Homepage Slideshow</label>
+        <div style="font-size:0.8rem;color:var(--muted);margin-bottom:0.6rem;">Tick the photos to show in the main page slideshow. If none are selected, the first 5 photos are used.</div>
+        <div id="slideshow-selector" style="max-height:200px;overflow-y:auto;border:1px solid var(--faint);padding:0.5rem;"></div>
+      </div>
+
+      <div style="margin-bottom:1.5rem;padding-bottom:1rem;border-bottom:1px solid var(--faint);">
+        <label style="font-family:var(--ff-mono);font-size:0.55rem;letter-spacing:0.15em;text-transform:uppercase;color:var(--muted);display:block;margin-bottom:0.5rem;">Photo Category Tags</label>
+        <div id="photo-tags-list" style="display:flex;flex-wrap:wrap;gap:0.4rem;margin-bottom:0.6rem;min-height:1.5rem;"></div>
+        <div style="display:flex;gap:0.5rem;">
+          <input type="text" id="photo-tag-input" placeholder="e.g. Sports, Events, Landscape" style="flex:1">
+          <button class="btn" id="photo-tag-add-btn" type="button">+ Add Tag</button>
+        </div>
+      </div>
+
+      <div class="item-list" id="photos-list"></div>
+      <button class="btn" id="add-photo-btn">+ Add Photo</button>
+    </div>
+
+    <!-- AWARDS PANEL -->
+    <div class="panel" id="panel-awards">
+      <div class="panel-title">Awards &amp; Press</div>
+      <div class="panel-sub">Festival selections, awards and press mentions</div>
+      <div class="item-list" id="awards-list"></div>
+      <button class="btn" id="add-award-btn">+ Add Award</button>
+    </div>
+
+    <!-- PROJECTS PANEL -->
+    <div class="panel" id="panel-projects">
+      <div class="panel-title">Projects</div>
+      <div class="panel-sub">Livestreams, productions, and other work — drag to reorder</div>
+      <div class="item-list" id="projects-list"></div>
+      <button class="btn" id="add-project-btn">+ Add Project</button>
+    </div>
+
+  </main>
+</div>
+
+<!-- PROJECT MODAL -->
+<div class="modal-backdrop" id="project-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <h2 id="project-modal-title">Add Project</h2>
+      <button class="modal-close" id="project-modal-close">&times;</button>
+    </div>
+    <div class="form-grid">
+      <div class="form-group">
+        <label>Title</label>
+        <input type="text" id="prj-title" placeholder="TES Sports Awards 2026">
+      </div>
+      <div class="form-group">
+        <label>Type</label>
+        <input type="text" id="prj-type" placeholder="Livestream, Concert, Production...">
+      </div>
+      <div class="form-group">
+        <label>Date / Year</label>
+        <input type="text" id="prj-date" placeholder="2026">
+      </div>
+      <div class="form-group">
+        <label>Link (YouTube, website, etc.)</label>
+        <input type="url" id="prj-link" placeholder="https://...">
+      </div>
+      <div class="form-group full">
+        <label>Description</label>
+        <textarea id="prj-desc" rows="3" placeholder="What the project was, your role, tools used..."></textarea>
+      </div>
+      <div class="form-group full">
+        <label>Cover Image</label>
+        <div class="upload-area">
+          <input type="file" accept="image/*" id="prj-image-file">
+          <div class="upload-label">Click to upload cover image</div>
+          <img class="upload-preview" id="prj-image-preview" alt="Project image preview">
+          <div class="upload-filename" id="prj-image-filename"></div>
+        </div>
+        <button class="btn danger" id="prj-image-clear" style="margin-top:0.4rem;display:none">Remove Image</button>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn" id="project-modal-cancel">Cancel</button>
+      <button class="btn primary" id="project-modal-save">Save Project</button>
+    </div>
+  </div>
+</div>
+
+<!-- AWARD MODAL -->
+<div class="modal-backdrop" id="award-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title" id="award-modal-title">Add Award</div>
+      <button class="modal-close" id="award-modal-close">&times;</button>
+    </div>
+    <div class="form-grid">
+      <div class="form-group full">
+        <label>Award / Recognition Title</label>
+        <input type="text" id="am-title" placeholder="Best Documentary">
+      </div>
+      <div class="form-group full">
+        <label>Festival / Publication</label>
+        <input type="text" id="am-festival" placeholder="Cape Town International Film Festival">
+      </div>
+      <div class="form-group">
+        <label>Year</label>
+        <input type="text" id="am-year" placeholder="2024">
+      </div>
+      <div class="form-group full">
+        <label>Award Image (laurel, certificate, photo, etc.)</label>
+        <div class="upload-area">
+          <input type="file" accept="image/*" id="am-image-file">
+          <div class="upload-label">Click to upload image</div>
+          <img class="upload-preview" id="am-image-preview" alt="Award image preview">
+          <div class="upload-filename" id="am-image-filename"></div>
+        </div>
+        <button class="btn danger" id="am-image-clear" style="margin-top:0.4rem;display:none">Remove Image</button>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn" id="award-modal-cancel">Cancel</button>
+      <button class="btn primary" id="award-modal-save">Save Award</button>
+    </div>
+  </div>
+</div>
+
+<!-- FILM MODAL -->
+<div class="modal-backdrop" id="film-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title" id="film-modal-title">Add Film</div>
+      <button class="modal-close" id="film-modal-close">&times;</button>
+    </div>
+    <div class="form-grid">
+      <div class="form-group">
+        <label>Title (main part)</label>
+        <input type="text" id="fm-title-main" placeholder="The Weight of">
+      </div>
+      <div class="form-group">
+        <label>Title (italic part)</label>
+        <input type="text" id="fm-title-italic" placeholder="Silence">
+      </div>
+      <div class="form-group">
+        <label>Year</label>
+        <input type="text" id="fm-year" placeholder="2024">
+      </div>
+      <div class="form-group">
+        <label>Type</label>
+        <select id="fm-type">
+          <option>Documentary</option>
+          <option>Narrative Short</option>
+          <option>Narrative Feature</option>
+          <option>Music Video</option>
+          <option>Commercial</option>
+          <option>Experimental</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Duration</label>
+        <input type="text" id="fm-duration" placeholder="38 min">
+      </div>
+      <div class="form-group">
+        <label>Format</label>
+        <input type="text" id="fm-format" placeholder="4K">
+      </div>
+      <div class="form-group full">
+        <label>Description</label>
+        <textarea id="fm-desc" rows="3" placeholder="Short description of the film..."></textarea>
+      </div>
+      <div class="form-group full">
+        <label>Video URL (YouTube or Vimeo)</label>
+        <input type="url" id="fm-video-url" placeholder="https://vimeo.com/123456 or https://youtube.com/watch?v=...">
+      </div>
+      <div class="form-group full" id="fm-crop-group" style="display:none;">
+        <label>Slideshow Crop — drag to reposition</label>
+        <div id="fm-crop-container" style="position:relative;width:100%;aspect-ratio:16/7;overflow:hidden;border:1px solid var(--faint);cursor:grab;background:var(--card);">
+          <img id="fm-crop-img" style="position:absolute;pointer-events:none;user-select:none;" draggable="false">
+        </div>
+        <div style="font-size:0.7rem;color:var(--muted);margin-top:0.3rem;">Drag the image to set how it appears in the slideshow</div>
+        <input type="hidden" id="fm-crop" value="center">
+      </div>
+      <div class="form-group full">
+        <label>Thumbnail Image</label>
+        <div class="upload-area">
+          <input type="file" accept="image/*" id="fm-thumb-file">
+          <div class="upload-label">Click to upload thumbnail (16:9 recommended)</div>
+          <img class="upload-preview" id="fm-thumb-preview" alt="Thumbnail preview">
+          <div class="upload-filename" id="fm-thumb-filename"></div>
+        </div>
+        <button class="btn danger" id="fm-thumb-clear" style="margin-top:0.4rem;display:none">Remove Thumbnail</button>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn" id="film-modal-cancel">Cancel</button>
+      <button class="btn primary" id="film-modal-save">Save Film</button>
+    </div>
+  </div>
+</div>
+
+<!-- PHOTO MODAL -->
+<div class="modal-backdrop" id="photo-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title" id="photo-modal-title">Add Photo</div>
+      <button class="modal-close" id="photo-modal-close">&times;</button>
+    </div>
+    <div class="form-grid">
+      <div class="form-group">
+        <label>Title</label>
+        <input type="text" id="pm-title" placeholder="Portrait Series">
+      </div>
+      <div class="form-group">
+        <label>Location / Year</label>
+        <input type="text" id="pm-location" placeholder="Cape Town, 2024">
+      </div>
+      <div class="form-group">
+        <label>Grid Span</label>
+        <select id="pm-span">
+          <option value="normal">Normal (1×1)</option>
+          <option value="tall">Tall (1×2 — portrait)</option>
+          <option value="wide">Wide (2×1 — landscape)</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Category Tag</label>
+        <select id="pm-tag">
+          <option value="">None</option>
+        </select>
+      </div>
+      <div class="form-group full" id="pm-crop-group" style="display:none;">
+        <label>Slideshow Crop — drag to reposition</label>
+        <div id="pm-crop-container" style="position:relative;width:100%;aspect-ratio:16/7;overflow:hidden;border:1px solid var(--faint);cursor:grab;background:var(--card);">
+          <img id="pm-crop-img" style="position:absolute;pointer-events:none;user-select:none;" draggable="false">
+        </div>
+        <div style="font-size:0.7rem;color:var(--muted);margin-top:0.3rem;">Drag the image to set how it appears in the slideshow</div>
+        <input type="hidden" id="pm-crop" value="center">
+      </div>
+      <div class="form-group full">
+        <label>Photo Image</label>
+        <div class="upload-area">
+          <input type="file" accept="image/*" id="pm-photo-file">
+          <div class="upload-label">Click to upload photo</div>
+          <img class="upload-preview" id="pm-photo-preview" alt="Photo preview">
+          <div class="upload-filename" id="pm-photo-filename"></div>
+        </div>
+        <button class="btn danger" id="pm-photo-clear" style="margin-top:0.4rem;display:none">Remove Photo</button>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn" id="photo-modal-cancel">Cancel</button>
+      <button class="btn primary" id="photo-modal-save">Save Photo</button>
+    </div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div id="toast">Changes saved</div>
+
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-storage-compat.js"></script>
+<script>
+// Firebase data layer for Louis Lamprecht Portfolio
+// Requires Firebase compat SDKs loaded before this script:
+//   firebase-app-compat.js, firebase-firestore-compat.js, firebase-storage-compat.js
+
+const firebaseConfig = {
+  apiKey:            "AIzaSyCvcw4ItbhTG10cTVSQGJLoF74fjrKW1jc",
+  authDomain:        "portfolio-3acbc.firebaseapp.com",
+  projectId:         "portfolio-3acbc",
+  storageBucket:     "portfolio-3acbc.firebasestorage.app",
+  messagingSenderId: "869692298519",
+  appId:             "1:869692298519:web:0de40d2458f5bdb5d35352"
+};
+
+if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+const db      = firebase.firestore();
+const storage = firebase.storage();
+const DOC_REF = db.collection('portfolio').doc('main');
+const LS_KEY  = 'll_portfolio';
+
+// ── DEFAULT DATA ──────────────────────────────────────────────
+const DEFAULT_DATA = {
+  info: {
+    name: 'Louis Lamprecht', tagline: 'Documentary · Film · Photography',
+    bio:  'Louis Lamprecht is a documentary filmmaker and photographer working across narrative film, documentary, landscape, and portraiture. His work is drawn to the quiet edges of human experience — the moments between words, the light that outlasts the day.',
+    bio2: 'Based between Cape Town and Johannesburg, he has screened work at festivals internationally and exhibited photography across South Africa and Europe.',
+    email: 'louis@louisl.com', vimeo: '#', instagram: '#', imdb: '#',
+    showreelUrl: '', heroBg: null, heroBgPosition: '50% 50%', portrait: null,
+    statFilms: '12+', statFestivals: '6', statImages: '200+',
+    disciplines: ['Documentary', 'Narrative Film', 'Landscape', 'Portrait', 'Travel'],
+    photoTags: [],
+    slideshowIds: [],
+    filmSlideshowIds: []
+  },
+  films: [
+    { id: 1, titleMain: 'The Weight of', titleItalic: 'Silence',   year: '2024', type: 'Documentary',    duration: '38 min', format: '4K',  desc: 'A journey through remote highland communities confronting the slow erasure of their traditions in an age of acceleration.', thumb: null, videoUrl: '', gradientClass: 'ft-1' },
+    { id: 2, titleMain: 'After',         titleItalic: 'the Flood', year: '2023', type: 'Narrative Short', duration: '22 min', format: '35mm',desc: 'Two strangers share a single night in a rain-soaked city, each carrying a past neither is ready to speak aloud.', thumb: null, videoUrl: '', gradientClass: 'ft-2' },
+    { id: 3, titleMain: 'Last',          titleItalic: 'Light',     year: '2022', type: 'Documentary',    duration: '52 min', format: '4K',  desc: 'Three photographers at the end of their careers reckon with what the image can and cannot hold.', thumb: null, videoUrl: '', gradientClass: 'ft-3' }
+  ],
+  photos: [
+    { id: 1, title: 'Portrait Series',     location: 'Cape Town, 2024',    span: 'tall',   src: null, tag: '' },
+    { id: 2, title: 'Mountain Light',      location: 'Drakensberg, 2024',  span: 'normal', src: null, tag: '' },
+    { id: 3, title: 'Desert Roads',        location: 'Namibia, 2023',      span: 'normal', src: null, tag: '' },
+    { id: 4, title: 'Coastline, Atlantic', location: 'Western Cape, 2023', span: 'wide',   src: null, tag: '' },
+    { id: 5, title: 'Studio Portrait',     location: 'Johannesburg, 2024', span: 'normal', src: null, tag: '' },
+    { id: 6, title: 'Forest Floor',        location: 'Tsitsikamma, 2022',  span: 'tall',   src: null, tag: '' },
+    { id: 7, title: 'Morning Market',      location: 'Marrakech, 2022',    span: 'normal', src: null, tag: '' }
+  ],
+  awards: [
+    { id: 1, title: 'Best Documentary',   festival: 'Cape Town International Film Festival',         year: '2024', image: null },
+    { id: 2, title: 'Official Selection', festival: 'Encounters South African Documentary Festival', year: '2023', image: null },
+    { id: 3, title: 'Jury Prize',         festival: 'Durban International Film Festival',            year: '2022', image: null }
+  ],
+  projects: []
+};
+
+// ── MERGE HELPER ───────────────────────────────────────────────
+function mergeWithDefaults(saved) {
+  return {
+    info:   { ...DEFAULT_DATA.info,   ...(saved.info   || {}) },
+    films:  saved.films   || DEFAULT_DATA.films,
+    photos: saved.photos  || DEFAULT_DATA.photos,
+    awards:   saved.awards   || DEFAULT_DATA.awards,
+    projects: saved.projects || DEFAULT_DATA.projects
+  };
+}
+
+// ── LOAD ───────────────────────────────────────────────────────
+async function loadData() {
+  try {
+    const doc = await DOC_REF.get();
+    if (doc.exists) {
+      const d = doc.data();
+      if (Object.keys(d).length > 0) return mergeWithDefaults(d);
+    }
+    return JSON.parse(JSON.stringify(DEFAULT_DATA));
+  } catch(e) {
+    console.warn('Firebase unavailable, falling back to localStorage:', e.message);
+    try {
+      const raw = localStorage.getItem(LS_KEY);
+      return raw ? mergeWithDefaults(JSON.parse(raw)) : JSON.parse(JSON.stringify(DEFAULT_DATA));
+    } catch { return JSON.parse(JSON.stringify(DEFAULT_DATA)); }
+  }
+}
+
+// ── SAVE ───────────────────────────────────────────────────────
+async function saveData(data) {
+  try {
+    await DOC_REF.set(data);
+    localStorage.setItem(LS_KEY, JSON.stringify(data)); // local backup
+  } catch(e) {
+    console.error('Firebase save failed, saving to localStorage only:', e.message);
+    localStorage.setItem(LS_KEY, JSON.stringify(data));
+    throw e; // re-throw so Admin can show error
+  }
+}
+
+// ── IMAGE UPLOAD ───────────────────────────────────────────────
+// dataUrl: base64 string from compressImage()
+// path: e.g. 'hero-bg', 'portrait', 'films/1/thumb', 'photos/3/image'
+// Returns: public download URL string, or null if no image
+async function uploadImage(dataUrl, path) {
+  if (!dataUrl) return null;
+  // If already a https URL (already uploaded), return as-is
+  if (dataUrl.startsWith('http')) return dataUrl;
+  const blob = await fetch(dataUrl).then(r => r.blob());
+  const ext  = blob.type === 'image/png' ? 'png' : 'jpg';
+  const ref  = storage.ref(`portfolio/${path}.${ext}`);
+  const snap = await ref.put(blob, { contentType: blob.type });
+  return await snap.ref.getDownloadURL();
+}
+
+// ── IMAGE COMPRESSION (client-side before upload) ─────────────
+function compressImage(file, maxWidth = 1400, quality = 0.82) {
+  return new Promise(resolve => {
+    const reader = new FileReader();
+    reader.onload = e => {
+      const img = new Image();
+      img.onload = () => {
+        let w = img.width, h = img.height;
+        if (w > maxWidth) { h = Math.round(h * maxWidth / w); w = maxWidth; }
+        const canvas = document.createElement('canvas');
+        canvas.width = w; canvas.height = h;
+        canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+        resolve(canvas.toDataURL('image/jpeg', quality));
+      };
+      img.src = e.target.result;
+    };
+    reader.readAsDataURL(file);
+  });
+}
+
+window.PortfolioFirebase = { loadData, saveData, uploadImage, compressImage, DEFAULT_DATA };
+
+</script>
+<script>
+(async () => {
+let data = await window.PortfolioFirebase.loadData();
+const persistData = async (d) => { await window.PortfolioFirebase.saveData(d); };
+let editingFilmId = null;
+let editingPhotoId = null;
+let filmThumbData = null;
+let photoImgData = null;
+let awardImgData = null;
+let portraitData = null;
+let heroBgData = null;
+
+// ── NAV ──────────────────────────────────────────
+document.querySelectorAll('.sidebar-item').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.sidebar-item').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById('panel-' + btn.dataset.panel).classList.add('active');
+  });
+});
+
+// ── POPULATE FORM ────────────────────────────────
+function populateInfo() {
+  document.getElementById('info-name').value        = data.info.name;
+  document.getElementById('info-tagline').value     = data.info.tagline;
+  document.getElementById('info-bio').value         = data.info.bio;
+  document.getElementById('info-bio2').value        = data.info.bio2;
+  document.getElementById('info-stat-films').value  = data.info.statFilms;
+  document.getElementById('info-stat-festivals').value = data.info.statFestivals;
+  document.getElementById('info-stat-images').value = data.info.statImages;
+  document.getElementById('contact-email').value    = data.info.email;
+  document.getElementById('contact-vimeo').value    = data.info.vimeo === '#' ? '' : data.info.vimeo;
+  document.getElementById('contact-instagram').value= data.info.instagram === '#' ? '' : data.info.instagram;
+  document.getElementById('contact-imdb').value     = data.info.imdb === '#' ? '' : data.info.imdb;
+  document.getElementById('info-showreel').value    = data.info.showreelUrl || '';
+  renderDisciplines();
+  if (data.info.heroBg) {
+    heroBgData = data.info.heroBg;
+    const prev = document.getElementById('hero-bg-preview');
+    prev.src = heroBgData; prev.classList.add('show');
+    document.getElementById('hero-bg-filename').textContent = 'Background loaded';
+    document.getElementById('hero-bg-clear').style.display = 'inline-flex';
+  }
+  if (data.info.portrait) {
+    portraitData = data.info.portrait;
+    const prev = document.getElementById('portrait-preview');
+    prev.src = portraitData; prev.classList.add('show');
+    document.getElementById('portrait-filename').textContent = 'Portrait loaded';
+    document.getElementById('portrait-clear').style.display = 'inline-flex';
+  }
+}
+populateInfo();
+
+// ── DISCIPLINE TAGS ──────────────────────────────
+function renderDisciplines() {
+  const list = document.getElementById('disciplines-list');
+  list.innerHTML = '';
+  (data.info.disciplines || []).forEach(tag => {
+    const chip = document.createElement('div');
+    chip.dataset.tag = tag;
+    chip.style.cssText = 'display:inline-flex;align-items:center;gap:0.4rem;padding:0.3rem 0.7rem;border:1px solid var(--faint);font-family:var(--ff-mono);font-size:0.55rem;letter-spacing:0.15em;text-transform:uppercase;';
+    chip.innerHTML = `<span>${tag}</span><button type="button" style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:0.8rem;padding:0;line-height:1;" data-remove-tag="${tag}">&times;</button>`;
+    list.appendChild(chip);
+  });
+  list.querySelectorAll('[data-remove-tag]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      data.info.disciplines = (data.info.disciplines || []).filter(t => t !== btn.dataset.removeTag);
+      renderDisciplines();
+    });
+  });
+}
+
+document.getElementById('discipline-add-btn').addEventListener('click', () => {
+  const input = document.getElementById('discipline-input');
+  const val = input.value.trim();
+  if (!val) return;
+  if (!(data.info.disciplines || []).includes(val)) {
+    if (!data.info.disciplines) data.info.disciplines = [];
+    data.info.disciplines.push(val);
+    renderDisciplines();
+  }
+  input.value = '';
+});
+document.getElementById('discipline-input').addEventListener('keydown', e => {
+  if (e.key === 'Enter') { e.preventDefault(); document.getElementById('discipline-add-btn').click(); }
+});
+
+// ── PHOTO CATEGORY TAGS ──────────────────────────
+function renderPhotoTags() {
+  const list = document.getElementById('photo-tags-list');
+  list.innerHTML = '';
+  (data.info.photoTags || []).forEach(tag => {
+    const chip = document.createElement('div');
+    chip.dataset.tag = tag;
+    chip.style.cssText = 'display:inline-flex;align-items:center;gap:0.4rem;padding:0.3rem 0.7rem;border:1px solid var(--faint);font-family:var(--ff-mono);font-size:0.55rem;letter-spacing:0.15em;text-transform:uppercase;';
+    chip.innerHTML = `<span>${tag}</span><button type="button" style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:0.8rem;padding:0;line-height:1;" data-remove-ptag="${tag}">&times;</button>`;
+    list.appendChild(chip);
+  });
+  list.querySelectorAll('[data-remove-ptag]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      data.info.photoTags = (data.info.photoTags || []).filter(t => t !== btn.dataset.removePtag);
+      renderPhotoTags();
+    });
+  });
+}
+renderPhotoTags();
+
+document.getElementById('photo-tag-add-btn').addEventListener('click', () => {
+  const input = document.getElementById('photo-tag-input');
+  const val = input.value.trim();
+  if (!val) return;
+  if (!data.info.photoTags) data.info.photoTags = [];
+  if (!data.info.photoTags.includes(val)) {
+    data.info.photoTags.push(val);
+    renderPhotoTags();
+  }
+  input.value = '';
+});
+document.getElementById('photo-tag-input').addEventListener('keydown', e => {
+  if (e.key === 'Enter') { e.preventDefault(); document.getElementById('photo-tag-add-btn').click(); }
+});
+
+// ── READ FIELDS ──────────────────────────────────
+function collectInfo() {
+  data.info.name          = document.getElementById('info-name').value;
+  data.info.tagline       = document.getElementById('info-tagline').value;
+  data.info.bio           = document.getElementById('info-bio').value;
+  data.info.bio2          = document.getElementById('info-bio2').value;
+  data.info.statFilms     = document.getElementById('info-stat-films').value;
+  data.info.statFestivals = document.getElementById('info-stat-festivals').value;
+  data.info.statImages    = document.getElementById('info-stat-images').value;
+  data.info.email         = document.getElementById('contact-email').value;
+  data.info.vimeo         = document.getElementById('contact-vimeo').value || '#';
+  data.info.instagram     = document.getElementById('contact-instagram').value || '#';
+  data.info.imdb          = document.getElementById('contact-imdb').value || '#';
+  data.info.showreelUrl   = document.getElementById('info-showreel').value || '';
+  data.info.disciplines   = Array.from(document.querySelectorAll('#disciplines-list [data-tag]')).map(el => el.dataset.tag);
+  data.info.photoTags     = Array.from(document.querySelectorAll('#photo-tags-list [data-tag]')).map(el => el.dataset.tag);
+  data.info.slideshowIds  = data.info.slideshowIds || [];
+  data.info.filmSlideshowIds = data.info.filmSlideshowIds || [];
+  data.info.heroBg        = heroBgData;
+  data.info.heroBgPosition = document.getElementById('hero-crop-hidden').value || '50% 50%';
+  data.info.portrait      = portraitData;
+}
+
+// ── SAVE ─────────────────────────────────────────
+document.getElementById('save-btn').addEventListener('click', async () => {
+  const btn = document.getElementById('save-btn');
+  btn.textContent = 'Saving…'; btn.disabled = true;
+  try {
+    collectInfo();
+    // Upload images to Firebase Storage if they are base64 (new uploads)
+    const { uploadImage } = window.PortfolioFirebase;
+    if (portraitData && !portraitData.startsWith('http')) {
+      data.info.portrait = await uploadImage(portraitData, 'portrait');
+      portraitData = data.info.portrait;
+    }
+    if (heroBgData && !heroBgData.startsWith('http')) {
+      data.info.heroBg = await uploadImage(heroBgData, 'hero-bg');
+      heroBgData = data.info.heroBg;
+    }
+    // Upload any film thumbnails
+    for (const film of data.films) {
+      if (film.thumb && !film.thumb.startsWith('http')) {
+        film.thumb = await uploadImage(film.thumb, `films/${film.id}/thumb`);
+      }
+    }
+    // Upload any photo images
+    for (const photo of data.photos) {
+      if (photo.src && !photo.src.startsWith('http')) {
+        photo.src = await uploadImage(photo.src, `photos/${photo.id}/image`);
+      }
+    }
+    // Upload any award images
+    for (const award of (data.awards || [])) {
+      if (award.image && !award.image.startsWith('http')) {
+        award.image = await uploadImage(award.image, `awards/${award.id}/image`);
+      }
+    }
+    // Upload any project images
+    for (const prj of (data.projects || [])) {
+      if (prj.image && !prj.image.startsWith('http')) {
+        prj.image = await uploadImage(prj.image, `projects/${prj.id}/image`);
+      }
+    }
+    await persistData(data);
+    showToast('All changes saved to Firebase');
+  } catch(e) {
+    showToast('Save failed — check console');
+    console.error(e);
+  } finally {
+    btn.textContent = 'Save All Changes'; btn.disabled = false;
+  }
+});
+
+// ── TOAST ────────────────────────────────────────
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2200);
+}
+
+// ── LOGIN (Firebase Auth) ────────────────────────
+// To create your admin account: in Firebase Console go to
+// Authentication → Sign-in method → enable Email/Password,
+// then Authentication → Users → Add user.
+const auth = firebase.auth();
+
+auth.onAuthStateChanged(user => {
+  if (user) {
+    document.getElementById('login-screen').classList.add('hidden');
+  } else {
+    document.getElementById('login-screen').classList.remove('hidden');
+  }
+});
+
+document.getElementById('login-btn').addEventListener('click', tryLogin);
+document.getElementById('login-input').addEventListener('keydown', e => { if (e.key === 'Enter') tryLogin(); });
+document.getElementById('login-email').addEventListener('keydown', e => { if (e.key === 'Enter') tryLogin(); });
+
+async function tryLogin() {
+  const email = document.getElementById('login-email').value.trim();
+  const pw    = document.getElementById('login-input').value;
+  const errEl = document.getElementById('login-error');
+  errEl.textContent = '';
+  try {
+    await auth.signInWithEmailAndPassword(email, pw);
+    document.getElementById('login-input').value = '';
+  } catch (e) {
+    errEl.textContent = 'Sign-in failed.';
+    document.getElementById('login-input').value = '';
+  }
+}
+
+// compressImage is defined above
+
+// ── HERO BG UPLOAD ───────────────────────────────
+let heroBgPosition = data.info.heroBgPosition || '50% 50%';
+document.getElementById('hero-crop-hidden').value = heroBgPosition;
+
+const heroCrop = initCropPositioner('hero-crop-container', 'hero-crop-img', 'hero-crop-hidden');
+// We don't have a hidden input in the HTML for hero, so we'll read position from the positioner's DOM
+// Actually let's add a hidden input approach: we'll just sync heroBgPosition from the crop container
+
+function showFocalUI(src) {
+  const wrap = document.getElementById('hero-bg-focal-wrap');
+  wrap.style.display = 'block';
+  const img = document.getElementById('hero-crop-img');
+  img.src = src;
+  img.onload = () => heroCrop.applyFromValue(heroBgPosition);
+}
+
+document.getElementById('hero-bg-file').addEventListener('change', async e => {
+  const file = e.target.files[0]; if (!file) return;
+  heroBgData = await window.PortfolioFirebase.compressImage(file, 1920, 0.85);
+  const prev = document.getElementById('hero-bg-preview');
+  prev.src = heroBgData; prev.classList.add('show');
+  document.getElementById('hero-bg-filename').textContent = file.name;
+  document.getElementById('hero-bg-clear').style.display = 'inline-flex';
+  heroBgPosition = '50% 50%';
+  showFocalUI(heroBgData);
+});
+document.getElementById('hero-bg-clear').addEventListener('click', () => {
+  heroBgData = null; heroBgPosition = '50% 50%';
+  const prev = document.getElementById('hero-bg-preview');
+  prev.src = ''; prev.classList.remove('show');
+  document.getElementById('hero-bg-filename').textContent = '';
+  document.getElementById('hero-bg-clear').style.display = 'none';
+  document.getElementById('hero-bg-focal-wrap').style.display = 'none';
+});
+
+if (data.info.heroBg) showFocalUI(data.info.heroBg);
+
+// ── PORTRAIT UPLOAD ──────────────────────────────
+document.getElementById('portrait-file').addEventListener('change', async e => {
+  const file = e.target.files[0]; if (!file) return;
+  portraitData = await window.PortfolioFirebase.compressImage(file);
+  const prev = document.getElementById('portrait-preview');
+  prev.src = portraitData; prev.classList.add('show');
+  document.getElementById('portrait-filename').textContent = file.name;
+  document.getElementById('portrait-clear').style.display = 'inline-flex';
+});
+document.getElementById('portrait-clear').addEventListener('click', () => {
+  portraitData = null;
+  const prev = document.getElementById('portrait-preview');
+  prev.src = ''; prev.classList.remove('show');
+  document.getElementById('portrait-filename').textContent = '';
+  document.getElementById('portrait-clear').style.display = 'none';
+});
+
+// ── RENDER FILMS LIST ────────────────────────────
+function renderFilms() {
+  const list = document.getElementById('films-list');
+  list.innerHTML = '';
+  data.films.forEach((film, i) => {
+    const row = document.createElement('div');
+    row.className = 'item-row'; row.dataset.id = film.id;
+    row.innerHTML = `
+      <span class="drag-handle" title="Drag to reorder">⠿</span>
+      <div class="item-row-thumb">${film.thumb ? `<img src="${film.thumb}" alt="">` : 'NO THUMB'}</div>
+      <div class="item-row-info">
+        <div class="item-row-title">${film.titleMain} <em>${film.titleItalic}</em></div>
+        <div class="item-row-meta">${film.type} · ${film.year} · ${film.duration}</div>
+      </div>
+      <div class="item-row-actions">
+        <button class="btn" data-edit-film="${film.id}">Edit</button>
+        <button class="btn danger" data-delete-film="${film.id}">Delete</button>
+      </div>`;
+    list.appendChild(row);
+  });
+  makeDraggable(list, 'films');
+  list.querySelectorAll('[data-edit-film]').forEach(btn => btn.addEventListener('click', () => openFilmModal(parseInt(btn.dataset.editFilm))));
+  list.querySelectorAll('[data-delete-film]').forEach(btn => btn.addEventListener('click', () => {
+    if (confirm('Delete this film?')) {
+      data.films = data.films.filter(f => f.id !== parseInt(btn.dataset.deleteFilm));
+      persistData(data); renderFilms(); renderFilmSlideshowSelector(); showToast('Film deleted');
+    }
+  }));
+}
+renderFilms();
+
+// ── FILM SLIDESHOW SELECTOR ─────────────────────
+function renderFilmSlideshowSelector() {
+  const container = document.getElementById('film-slideshow-selector');
+  container.innerHTML = '';
+  const selected = data.info.filmSlideshowIds || [];
+  (data.films || []).forEach(film => {
+    const label = document.createElement('label');
+    label.style.cssText = 'display:flex;align-items:center;gap:0.5rem;padding:0.3rem 0.2rem;cursor:pointer;font-size:0.8rem;color:var(--text);';
+    const cb = document.createElement('input');
+    cb.type = 'checkbox';
+    cb.checked = selected.includes(film.id);
+    cb.addEventListener('change', () => {
+      if (!data.info.filmSlideshowIds) data.info.filmSlideshowIds = [];
+      if (cb.checked) {
+        if (!data.info.filmSlideshowIds.includes(film.id)) data.info.filmSlideshowIds.push(film.id);
+      } else {
+        data.info.filmSlideshowIds = data.info.filmSlideshowIds.filter(id => id !== film.id);
+      }
+    });
+    const name = [film.titleMain, film.titleItalic].filter(Boolean).join(' ') || `Film ${film.id}`;
+    label.appendChild(cb);
+    label.appendChild(document.createTextNode(name));
+    container.appendChild(label);
+  });
+}
+renderFilmSlideshowSelector();
+
+// ── RENDER PHOTOS LIST ───────────────────────────
+function renderPhotos() {
+  const list = document.getElementById('photos-list');
+  list.innerHTML = '';
+  data.photos.forEach((photo, i) => {
+    const row = document.createElement('div');
+    row.className = 'item-row'; row.dataset.id = photo.id;
+    row.innerHTML = `
+      <span class="drag-handle" title="Drag to reorder">⠿</span>
+      <div class="item-row-thumb photo-sq">${photo.src ? `<img src="${photo.src}" alt="">` : 'NO IMG'}</div>
+      <div class="item-row-info">
+        <div class="item-row-title">${photo.title}</div>
+        <div class="item-row-meta">${photo.location} · ${photo.span}</div>
+      </div>
+      <div class="item-row-actions">
+        <button class="btn" data-edit-photo="${photo.id}">Edit</button>
+        <button class="btn danger" data-delete-photo="${photo.id}">Delete</button>
+      </div>`;
+    list.appendChild(row);
+  });
+  makeDraggable(list, 'photos');
+  list.querySelectorAll('[data-edit-photo]').forEach(btn => btn.addEventListener('click', () => openPhotoModal(parseInt(btn.dataset.editPhoto))));
+  list.querySelectorAll('[data-delete-photo]').forEach(btn => btn.addEventListener('click', () => {
+    if (confirm('Delete this photo?')) {
+      data.photos = data.photos.filter(p => p.id !== parseInt(btn.dataset.deletePhoto));
+      persistData(data); renderPhotos(); renderSlideshowSelector(); showToast('Photo deleted');
+    }
+  }));
+}
+renderPhotos();
+
+// ── SLIDESHOW SELECTOR ──────────────────────────
+function renderSlideshowSelector() {
+  const container = document.getElementById('slideshow-selector');
+  container.innerHTML = '';
+  const selected = data.info.slideshowIds || [];
+  (data.photos || []).forEach(photo => {
+    const label = document.createElement('label');
+    label.style.cssText = 'display:flex;align-items:center;gap:0.5rem;padding:0.3rem 0.2rem;cursor:pointer;font-size:0.8rem;color:var(--text);';
+    const cb = document.createElement('input');
+    cb.type = 'checkbox';
+    cb.checked = selected.includes(photo.id);
+    cb.addEventListener('change', () => {
+      if (!data.info.slideshowIds) data.info.slideshowIds = [];
+      if (cb.checked) {
+        if (!data.info.slideshowIds.includes(photo.id)) data.info.slideshowIds.push(photo.id);
+      } else {
+        data.info.slideshowIds = data.info.slideshowIds.filter(id => id !== photo.id);
+      }
+    });
+    const name = photo.title || photo.location || `Photo ${photo.id}`;
+    label.appendChild(cb);
+    label.appendChild(document.createTextNode(name));
+    container.appendChild(label);
+  });
+}
+renderSlideshowSelector();
+
+// ── DRAG TO REORDER ──────────────────────────────
+function makeDraggable(list, type) {
+  let dragging = null;
+  list.querySelectorAll('.item-row').forEach(row => {
+    row.setAttribute('draggable', 'true');
+    row.addEventListener('dragstart', () => { dragging = row; row.style.opacity = '0.4'; });
+    row.addEventListener('dragend',   () => { dragging = null; row.style.opacity = '1'; reorderData(list, type); });
+    row.addEventListener('dragover',  e => { e.preventDefault(); const after = getDragAfter(list, e.clientY); if (after) list.insertBefore(dragging, after); else list.appendChild(dragging); });
+  });
+}
+function getDragAfter(container, y) {
+  const rows = [...container.querySelectorAll('.item-row:not([style*="opacity: 0.4"])')];
+  return rows.reduce((closest, child) => {
+    const box = child.getBoundingClientRect();
+    const offset = y - box.top - box.height / 2;
+    return (offset < 0 && offset > closest.offset) ? { offset, element: child } : closest;
+  }, { offset: Number.NEGATIVE_INFINITY }).element;
+}
+function reorderData(list, type) {
+  const ids = [...list.querySelectorAll('.item-row')].map(r => parseInt(r.dataset.id));
+  if (type === 'films') data.films = ids.map(id => data.films.find(f => f.id === id)).filter(Boolean);
+  else if (type === 'photos') data.photos = ids.map(id => data.photos.find(p => p.id === id)).filter(Boolean);
+  else if (type === 'awards') data.awards = ids.map(id => (data.awards||[]).find(a => a.id === id)).filter(Boolean);
+  else if (type === 'projects') data.projects = ids.map(id => (data.projects||[]).find(p => p.id === id)).filter(Boolean);
+  persistData(data); showToast('Order saved');
+}
+
+// ── FILM MODAL ───────────────────────────────────
+// ── CROP POSITIONER (reusable) ───────────────────
+function initCropPositioner(containerId, imgId, hiddenInputId) {
+  const container = document.getElementById(containerId);
+  const img = document.getElementById(imgId);
+  const input = document.getElementById(hiddenInputId);
+  let dragging = false;
+  let startX = 0, startY = 0, startLeft = 0, startTop = 0;
+  let axis = 'y'; // which axis has overflow
+
+  function sizeImage() {
+    // Reset to measure natural dimensions
+    img.style.width = ''; img.style.height = '';
+    img.style.top = '0px'; img.style.left = '0px';
+    const cW = container.offsetWidth;
+    const cH = container.offsetHeight;
+    const nW = img.naturalWidth;
+    const nH = img.naturalHeight;
+    if (!nW || !nH || !cW || !cH) return;
+    const cRatio = cW / cH;
+    const iRatio = nW / nH;
+    if (iRatio < cRatio) {
+      // Image is taller than container proportionally — fill width, drag vertically
+      img.style.width = cW + 'px';
+      img.style.height = (cW / iRatio) + 'px';
+      axis = 'y';
+    } else {
+      // Image is wider than container proportionally — fill height, drag horizontally
+      img.style.height = cH + 'px';
+      img.style.width = (cH * iRatio) + 'px';
+      axis = 'x';
+    }
+  }
+
+  function clamp() {
+    const cW = container.offsetWidth;
+    const cH = container.offsetHeight;
+    const iW = img.offsetWidth;
+    const iH = img.offsetHeight;
+    let top = parseFloat(img.style.top || 0);
+    let left = parseFloat(img.style.left || 0);
+    // Clamp vertical
+    if (top > 0) top = 0;
+    if (iH > cH && top < cH - iH) top = cH - iH;
+    if (iH <= cH) top = 0;
+    // Clamp horizontal
+    if (left > 0) left = 0;
+    if (iW > cW && left < cW - iW) left = cW - iW;
+    if (iW <= cW) left = 0;
+    img.style.top = top + 'px';
+    img.style.left = left + 'px';
+    // Calculate percentage
+    let xPct = 50, yPct = 50;
+    if (iW > cW) xPct = Math.round((-left / (iW - cW)) * 100);
+    if (iH > cH) yPct = Math.round((-top / (iH - cH)) * 100);
+    input.value = xPct + '% ' + yPct + '%';
+  }
+
+  function applyFromValue(val) {
+    sizeImage();
+    const cW = container.offsetWidth;
+    const cH = container.offsetHeight;
+    const iW = img.offsetWidth;
+    const iH = img.offsetHeight;
+    let xPct = 50, yPct = 50;
+    if (val && val.includes('%')) {
+      const parts = val.split(/\s+/);
+      xPct = parseInt(parts[0]) || 50;
+      yPct = parseInt(parts[1] || parts[0]) || 50;
+    } else if (val === 'top') yPct = 0;
+    else if (val === 'bottom') yPct = 100;
+    if (iW > cW) img.style.left = -(xPct / 100 * (iW - cW)) + 'px';
+    if (iH > cH) img.style.top = -(yPct / 100 * (iH - cH)) + 'px';
+  }
+
+  function onDown(x, y) { dragging = true; startX = x; startY = y; startLeft = parseFloat(img.style.left || 0); startTop = parseFloat(img.style.top || 0); container.style.cursor = 'grabbing'; }
+  function onMove(x, y) { if (!dragging) return; img.style.left = (startLeft + x - startX) + 'px'; img.style.top = (startTop + y - startY) + 'px'; clamp(); }
+  function onUp() { if (dragging) { dragging = false; container.style.cursor = 'grab'; clamp(); } }
+
+  container.addEventListener('mousedown', e => { onDown(e.clientX, e.clientY); e.preventDefault(); });
+  document.addEventListener('mousemove', e => onMove(e.clientX, e.clientY));
+  document.addEventListener('mouseup', onUp);
+  container.addEventListener('touchstart', e => { onDown(e.touches[0].clientX, e.touches[0].clientY); e.preventDefault(); }, { passive: false });
+  document.addEventListener('touchmove', e => { if (dragging) onMove(e.touches[0].clientX, e.touches[0].clientY); });
+  document.addEventListener('touchend', onUp);
+
+  return { applyFromValue };
+}
+
+const pmCrop = initCropPositioner('pm-crop-container', 'pm-crop-img', 'pm-crop');
+const fmCrop = initCropPositioner('fm-crop-container', 'fm-crop-img', 'fm-crop');
+
+function showCropPreview(prefix, src, savedPosition) {
+  const group = document.getElementById(prefix + '-crop-group');
+  const img = document.getElementById(prefix + '-crop-img');
+  const positioner = prefix === 'pm' ? pmCrop : fmCrop;
+  if (src) {
+    group.style.display = 'block';
+    img.src = src;
+    img.onload = () => positioner.applyFromValue(savedPosition || 'center');
+  } else {
+    group.style.display = 'none';
+  }
+}
+
+function openFilmModal(id) {
+  editingFilmId = id || null;
+  filmThumbData = null;
+  const film = id ? data.films.find(f => f.id === id) : null;
+  document.getElementById('film-modal-title').textContent = film ? 'Edit Film' : 'Add Film';
+  document.getElementById('fm-title-main').value   = film?.titleMain || '';
+  document.getElementById('fm-title-italic').value = film?.titleItalic || '';
+  document.getElementById('fm-year').value         = film?.year || new Date().getFullYear();
+  document.getElementById('fm-type').value         = film?.type || 'Documentary';
+  document.getElementById('fm-duration').value     = film?.duration || '';
+  document.getElementById('fm-format').value       = film?.format || '4K';
+  document.getElementById('fm-desc').value         = film?.desc || '';
+  document.getElementById('fm-video-url').value    = film?.videoUrl || '';
+  document.getElementById('fm-crop').value         = film?.cropPosition || 'center';
+  showCropPreview('fm', film?.thumb || filmThumbData, film?.cropPosition);
+  const prev = document.getElementById('fm-thumb-preview');
+  const clearBtn = document.getElementById('fm-thumb-clear');
+  if (film?.thumb) {
+    filmThumbData = film.thumb;
+    prev.src = film.thumb; prev.classList.add('show');
+    document.getElementById('fm-thumb-filename').textContent = 'Thumbnail loaded';
+    clearBtn.style.display = 'inline-flex';
+  } else {
+    prev.src = ''; prev.classList.remove('show');
+    document.getElementById('fm-thumb-filename').textContent = '';
+    clearBtn.style.display = 'none';
+  }
+  document.getElementById('film-modal').classList.add('open');
+}
+function closeFilmModal() { document.getElementById('film-modal').classList.remove('open'); }
+
+document.getElementById('add-film-btn').addEventListener('click', () => openFilmModal(null));
+document.getElementById('film-modal-close').addEventListener('click', closeFilmModal);
+document.getElementById('film-modal-cancel').addEventListener('click', closeFilmModal);
+
+document.getElementById('fm-thumb-file').addEventListener('change', async e => {
+  const file = e.target.files[0]; if (!file) return;
+  filmThumbData = await window.PortfolioFirebase.compressImage(file);
+  const prev = document.getElementById('fm-thumb-preview');
+  prev.src = filmThumbData; prev.classList.add('show');
+  document.getElementById('fm-thumb-filename').textContent = file.name;
+  document.getElementById('fm-thumb-clear').style.display = 'inline-flex';
+  showCropPreview('fm', filmThumbData, 'center');
+});
+document.getElementById('fm-thumb-clear').addEventListener('click', () => {
+  filmThumbData = null;
+  const prev = document.getElementById('fm-thumb-preview');
+  prev.src = ''; prev.classList.remove('show');
+  document.getElementById('fm-thumb-filename').textContent = '';
+  document.getElementById('fm-thumb-clear').style.display = 'none';
+  document.getElementById('fm-crop-group').style.display = 'none';
+});
+
+document.getElementById('film-modal-save').addEventListener('click', () => {
+  const filmData = {
+    id: editingFilmId || Date.now(),
+    titleMain:   document.getElementById('fm-title-main').value,
+    titleItalic: document.getElementById('fm-title-italic').value,
+    year:        document.getElementById('fm-year').value,
+    type:        document.getElementById('fm-type').value,
+    duration:    document.getElementById('fm-duration').value,
+    format:      document.getElementById('fm-format').value,
+    desc:        document.getElementById('fm-desc').value,
+    videoUrl:    document.getElementById('fm-video-url').value,
+    cropPosition: document.getElementById('fm-crop').value,
+    thumb:       filmThumbData
+  };
+  if (editingFilmId) {
+    const idx = data.films.findIndex(f => f.id === editingFilmId);
+    data.films[idx] = filmData;
+  } else {
+    data.films.push(filmData);
+  }
+  persistData(data); renderFilms(); renderFilmSlideshowSelector(); closeFilmModal();
+  showToast(editingFilmId ? 'Film updated' : 'Film added');
+});
+
+// ── PHOTO MODAL ──────────────────────────────────
+function openPhotoModal(id) {
+  editingPhotoId = id || null;
+  photoImgData = null;
+  const photo = id ? data.photos.find(p => p.id === id) : null;
+  document.getElementById('photo-modal-title').textContent = photo ? 'Edit Photo' : 'Add Photo';
+  document.getElementById('pm-title').value    = photo?.title || '';
+  document.getElementById('pm-location').value = photo?.location || '';
+  document.getElementById('pm-span').value     = photo?.span || 'normal';
+  // Populate tag dropdown
+  const tagSelect = document.getElementById('pm-tag');
+  tagSelect.innerHTML = '<option value="">None</option>';
+  (data.info.photoTags || []).forEach(t => {
+    const opt = document.createElement('option');
+    opt.value = t; opt.textContent = t;
+    tagSelect.appendChild(opt);
+  });
+  tagSelect.value = photo?.tag || '';
+  document.getElementById('pm-crop').value = photo?.cropPosition || 'center';
+  showCropPreview('pm', photo?.src || photoImgData, photo?.cropPosition);
+  const prev = document.getElementById('pm-photo-preview');
+  const clearBtn = document.getElementById('pm-photo-clear');
+  if (photo?.src) {
+    photoImgData = photo.src;
+    prev.src = photo.src; prev.classList.add('show');
+    document.getElementById('pm-photo-filename').textContent = 'Photo loaded';
+    clearBtn.style.display = 'inline-flex';
+  } else {
+    prev.src = ''; prev.classList.remove('show');
+    document.getElementById('pm-photo-filename').textContent = '';
+    clearBtn.style.display = 'none';
+  }
+  document.getElementById('photo-modal').classList.add('open');
+}
+function closePhotoModal() { document.getElementById('photo-modal').classList.remove('open'); }
+
+document.getElementById('add-photo-btn').addEventListener('click', () => openPhotoModal(null));
+document.getElementById('photo-modal-close').addEventListener('click', closePhotoModal);
+document.getElementById('photo-modal-cancel').addEventListener('click', closePhotoModal);
+
+document.getElementById('pm-photo-file').addEventListener('change', async e => {
+  const file = e.target.files[0]; if (!file) return;
+  photoImgData = await window.PortfolioFirebase.compressImage(file);
+  const prev = document.getElementById('pm-photo-preview');
+  prev.src = photoImgData; prev.classList.add('show');
+  document.getElementById('pm-photo-filename').textContent = file.name;
+  document.getElementById('pm-photo-clear').style.display = 'inline-flex';
+  showCropPreview('pm', photoImgData, 'center');
+});
+document.getElementById('pm-photo-clear').addEventListener('click', () => {
+  photoImgData = null;
+  const prev = document.getElementById('pm-photo-preview');
+  prev.src = ''; prev.classList.remove('show');
+  document.getElementById('pm-photo-filename').textContent = '';
+  document.getElementById('pm-photo-clear').style.display = 'none';
+  document.getElementById('pm-crop-group').style.display = 'none';
+});
+
+document.getElementById('photo-modal-save').addEventListener('click', () => {
+  const photoData = {
+    id: editingPhotoId || Date.now(),
+    title:    document.getElementById('pm-title').value,
+    location: document.getElementById('pm-location').value,
+    span:     document.getElementById('pm-span').value,
+    tag:      document.getElementById('pm-tag').value,
+    cropPosition: document.getElementById('pm-crop').value,
+    src:      photoImgData
+  };
+  if (editingPhotoId) {
+    const idx = data.photos.findIndex(p => p.id === editingPhotoId);
+    data.photos[idx] = photoData;
+  } else {
+    data.photos.push(photoData);
+  }
+  persistData(data); renderPhotos(); renderSlideshowSelector(); closePhotoModal();
+  showToast(editingPhotoId ? 'Photo updated' : 'Photo added');
+});
+
+// ── PROJECTS ────────────────────────────────────
+let editingProjectId = null;
+let projectImgData = null;
+
+function renderProjects() {
+  const list = document.getElementById('projects-list');
+  list.innerHTML = '';
+  (data.projects || []).forEach((prj, i) => {
+    const row = document.createElement('div');
+    row.className = 'item-row'; row.dataset.id = prj.id;
+    const thumbHtml = prj.image ? `<img src="${prj.image}" alt="" style="width:48px;height:36px;object-fit:cover;border-radius:2px;">` : '<div style="width:48px;height:36px;background:var(--card);border-radius:2px;"></div>';
+    row.innerHTML = `
+      <div class="item-drag">::</div>
+      ${thumbHtml}
+      <div class="item-info"><div class="item-title">${prj.title || 'Untitled'}</div><div class="item-sub">${[prj.type, prj.date].filter(Boolean).join(' · ')}</div></div>
+      <button class="btn" onclick="openProjectModal(${prj.id})">Edit</button>
+      <button class="btn danger" data-delete-project="${prj.id}">Delete</button>`;
+    list.appendChild(row);
+  });
+  makeDraggable(list, 'projects');
+  list.querySelectorAll('[data-delete-project]').forEach(btn => btn.addEventListener('click', () => {
+    if (confirm('Delete this project?')) {
+      data.projects = data.projects.filter(p => p.id !== Number(btn.dataset.deleteProject));
+      persistData(data); renderProjects(); showToast('Project deleted');
+    }
+  }));
+}
+renderProjects();
+
+window.openProjectModal = function(id) {
+  editingProjectId = id || null;
+  projectImgData = null;
+  const prj = id ? (data.projects || []).find(p => p.id === id) : null;
+  document.getElementById('project-modal-title').textContent = prj ? 'Edit Project' : 'Add Project';
+  document.getElementById('prj-title').value = prj?.title || '';
+  document.getElementById('prj-type').value  = prj?.type || '';
+  document.getElementById('prj-date').value  = prj?.date || '';
+  document.getElementById('prj-link').value  = prj?.link || '';
+  document.getElementById('prj-desc').value  = prj?.desc || '';
+
+  const prev = document.getElementById('prj-image-preview');
+  prev.src = ''; prev.classList.remove('show');
+  document.getElementById('prj-image-filename').textContent = '';
+  document.getElementById('prj-image-clear').style.display = 'none';
+  document.getElementById('prj-image-file').value = '';
+  if (prj?.image) {
+    projectImgData = prj.image;
+    prev.src = prj.image; prev.classList.add('show');
+    document.getElementById('prj-image-clear').style.display = 'inline-flex';
+  }
+  document.getElementById('project-modal').classList.add('open');
+};
+
+function closeProjectModal() { document.getElementById('project-modal').classList.remove('open'); }
+document.getElementById('add-project-btn').addEventListener('click', () => openProjectModal(null));
+document.getElementById('project-modal-close').addEventListener('click', closeProjectModal);
+document.getElementById('project-modal-cancel').addEventListener('click', closeProjectModal);
+document.getElementById('project-modal').addEventListener('click', e => { if (e.target === e.currentTarget) closeProjectModal(); });
+
+document.getElementById('prj-image-file').addEventListener('change', async e => {
+  const file = e.target.files[0]; if (!file) return;
+  projectImgData = await window.PortfolioFirebase.compressImage(file);
+  const prev = document.getElementById('prj-image-preview');
+  prev.src = projectImgData; prev.classList.add('show');
+  document.getElementById('prj-image-filename').textContent = file.name;
+  document.getElementById('prj-image-clear').style.display = 'inline-flex';
+});
+document.getElementById('prj-image-clear').addEventListener('click', () => {
+  projectImgData = null;
+  const prev = document.getElementById('prj-image-preview');
+  prev.src = ''; prev.classList.remove('show');
+  document.getElementById('prj-image-filename').textContent = '';
+  document.getElementById('prj-image-clear').style.display = 'none';
+  document.getElementById('prj-image-file').value = '';
+});
+
+document.getElementById('project-modal-save').addEventListener('click', () => {
+  if (!data.projects) data.projects = [];
+  const prjData = {
+    id: editingProjectId || Date.now(),
+    title: document.getElementById('prj-title').value,
+    type:  document.getElementById('prj-type').value,
+    date:  document.getElementById('prj-date').value,
+    link:  document.getElementById('prj-link').value,
+    desc:  document.getElementById('prj-desc').value,
+    image: projectImgData
+  };
+  if (editingProjectId) {
+    const idx = data.projects.findIndex(p => p.id === editingProjectId);
+    data.projects[idx] = prjData;
+  } else {
+    data.projects.push(prjData);
+  }
+  persistData(data); renderProjects(); closeProjectModal();
+  showToast(editingProjectId ? 'Project updated' : 'Project added');
+});
+
+// ── AWARDS ───────────────────────────────────────
+let editingAwardId = null;
+
+function renderAwards() {
+  const list = document.getElementById('awards-list');
+  list.innerHTML = '';
+  (data.awards || []).forEach(award => {
+    const row = document.createElement('div');
+    row.className = 'item-row'; row.dataset.id = award.id;
+    row.innerHTML = `
+      <span class="drag-handle">⠿</span>
+      <div class="item-row-info">
+        <div class="item-row-title">${award.title}</div>
+        <div class="item-row-meta">${award.festival} · ${award.year}</div>
+      </div>
+      <div class="item-row-actions">
+        <button class="btn" data-edit-award="${award.id}">Edit</button>
+        <button class="btn danger" data-delete-award="${award.id}">Delete</button>
+      </div>`;
+    list.appendChild(row);
+  });
+  makeDraggable(list, 'awards');
+  list.querySelectorAll('[data-edit-award]').forEach(btn => btn.addEventListener('click', () => openAwardModal(parseInt(btn.dataset.editAward))));
+  list.querySelectorAll('[data-delete-award]').forEach(btn => btn.addEventListener('click', () => {
+    if (confirm('Delete this award?')) {
+      data.awards = data.awards.filter(a => a.id !== parseInt(btn.dataset.deleteAward));
+      persistData(data); renderAwards(); showToast('Award deleted');
+    }
+  }));
+}
+renderAwards();
+
+function openAwardModal(id) {
+  editingAwardId = id || null;
+  const award = id ? (data.awards || []).find(a => a.id === id) : null;
+  document.getElementById('award-modal-title').textContent = award ? 'Edit Award' : 'Add Award';
+  document.getElementById('am-title').value    = award?.title || '';
+  document.getElementById('am-festival').value = award?.festival || '';
+  document.getElementById('am-year').value     = award?.year || new Date().getFullYear();
+
+  // Reset image state
+  awardImgData = null;
+  const prev = document.getElementById('am-image-preview');
+  prev.src = ''; prev.classList.remove('show');
+  document.getElementById('am-image-filename').textContent = '';
+  document.getElementById('am-image-clear').style.display = 'none';
+  document.getElementById('am-image-file').value = '';
+  if (award?.image) {
+    awardImgData = award.image;
+    prev.src = award.image; prev.classList.add('show');
+    document.getElementById('am-image-clear').style.display = 'inline-flex';
+  }
+
+  document.getElementById('award-modal').classList.add('open');
+}
+function closeAwardModal() { document.getElementById('award-modal').classList.remove('open'); }
+
+document.getElementById('add-award-btn').addEventListener('click', () => openAwardModal(null));
+document.getElementById('award-modal-close').addEventListener('click', closeAwardModal);
+document.getElementById('award-modal-cancel').addEventListener('click', closeAwardModal);
+document.getElementById('award-modal').addEventListener('click', e => { if (e.target === e.currentTarget) closeAwardModal(); });
+
+document.getElementById('am-image-file').addEventListener('change', async e => {
+  const file = e.target.files[0]; if (!file) return;
+  awardImgData = await window.PortfolioFirebase.compressImage(file);
+  const prev = document.getElementById('am-image-preview');
+  prev.src = awardImgData; prev.classList.add('show');
+  document.getElementById('am-image-filename').textContent = file.name;
+  document.getElementById('am-image-clear').style.display = 'inline-flex';
+});
+document.getElementById('am-image-clear').addEventListener('click', () => {
+  awardImgData = null;
+  const prev = document.getElementById('am-image-preview');
+  prev.src = ''; prev.classList.remove('show');
+  document.getElementById('am-image-filename').textContent = '';
+  document.getElementById('am-image-clear').style.display = 'none';
+  document.getElementById('am-image-file').value = '';
+});
+
+document.getElementById('award-modal-save').addEventListener('click', () => {
+  if (!data.awards) data.awards = [];
+  const awardData = {
+    id: editingAwardId || Date.now(),
+    title:    document.getElementById('am-title').value,
+    festival: document.getElementById('am-festival').value,
+    year:     document.getElementById('am-year').value,
+    image:    awardImgData
+  };
+  if (editingAwardId) {
+    const idx = data.awards.findIndex(a => a.id === editingAwardId);
+    data.awards[idx] = awardData;
+  } else {
+    data.awards.push(awardData);
+  }
+  persistData(data); renderAwards(); closeAwardModal();
+  showToast(editingAwardId ? 'Award updated' : 'Award added');
+});
+
+// Close modals on backdrop click
+['film-modal','photo-modal','award-modal'].forEach(id => {
+  document.getElementById(id).addEventListener('click', e => {
+    if (e.target === e.currentTarget) { closeFilmModal(); closePhotoModal(); closeAwardModal(); }
+  });
+});
+})();
+</script>
+</body>
+</html>

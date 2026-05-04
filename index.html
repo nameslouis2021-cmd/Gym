@@ -1,0 +1,1161 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Louis Lamprecht</title>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' fill='%230e0e0e'/%3E%3Ctext x='32' y='50' font-family='Georgia,serif' font-size='46' font-weight='300' fill='%23c8b99a' text-anchor='middle' letter-spacing='2'%3ELL%3C/text%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --bg: #080705; --surface: #111009; --card: #151310; --text: #e6ddd0;
+    --muted: #7a6e62; --faint: #2a2520;
+    --accent: oklch(0.70 0.09 58);
+    --ff-display: 'Cormorant Garamond', serif;
+    --ff-mono: 'Space Mono', monospace;
+    --photo-cols: 3;
+  }
+  html { scroll-behavior: smooth; }
+  body { background: var(--bg); color: var(--text); font-family: var(--ff-display); font-weight: 300; overflow-x: hidden; }
+
+  /* INTRO */
+  #intro { position: fixed; inset: 0; z-index: 1000; background: #050403; display: flex; flex-direction: column; align-items: center; justify-content: center; transition: opacity 1s ease 0.2s; }
+  #intro.fade-out { opacity: 0; pointer-events: none; }
+  .intro-name { font-family: var(--ff-display); font-size: clamp(3rem, 9vw, 8rem); font-weight: 300; letter-spacing: 0.22em; text-transform: uppercase; line-height: 1; overflow: hidden; }
+  .intro-line { width: 0; height: 1px; background: var(--accent); margin: 2.4rem 0 2rem; transition: width 0.9s cubic-bezier(0.77,0,0.18,1); }
+  .intro-line.grow { width: min(480px, 60vw); }
+  .intro-sub { font-family: var(--ff-mono); font-size: clamp(0.55rem, 1.2vw, 0.72rem); letter-spacing: 0.35em; text-transform: uppercase; color: var(--muted); opacity: 0; transition: opacity 0.8s ease; }
+  .intro-sub.show { opacity: 1; }
+  .char { opacity: 0; transform: translateY(18px); display: inline-block; transition: opacity 0.5s ease, transform 0.5s ease; }
+  .char.space { width: 0.3em; }
+  .char.visible { opacity: 1; transform: translateY(0); }
+
+  /* CURSOR */
+  #cursor { position: fixed; width: 6px; height: 6px; border-radius: 50%; background: var(--accent); pointer-events: none; z-index: 9999; transform: translate(-50%,-50%); transition: width 0.3s ease, height 0.3s ease; mix-blend-mode: screen; }
+  #cursor.big { width: 48px; height: 48px; background: none; border: 1px solid var(--accent); }
+  @media (hover: none), (pointer: coarse) {
+    #cursor { display: none !important; }
+    *, .film-card, .photo-item { cursor: auto !important; }
+  }
+
+  /* NAV */
+  nav { position: fixed; top: 0; left: 0; right: 0; z-index: 100; display: flex; align-items: center; justify-content: space-between; padding: 2rem 3.5rem; }
+  nav::before { content: ''; position: absolute; inset: 0; background: linear-gradient(to bottom, rgba(8,7,5,0.92) 0%, transparent 100%); pointer-events: none; }
+  .nav-logo { text-decoration: none; display: flex; align-items: center; opacity: 0.92; transition: opacity 0.3s; }
+  .nav-logo:hover { opacity: 1; }
+  .nav-links { display: flex; gap: 2.8rem; list-style: none; position: relative; }
+  .nav-links a { font-family: var(--ff-mono); font-size: 0.62rem; letter-spacing: 0.28em; text-transform: uppercase; color: var(--muted); text-decoration: none; transition: color 0.3s; }
+  .nav-links a:hover { color: var(--text); }
+  .nav-admin { font-family: var(--ff-mono); font-size: 0.55rem; letter-spacing: 0.25em; text-transform: uppercase; color: var(--faint); text-decoration: none; position: relative; transition: color 0.3s; }
+  .nav-admin:hover { color: var(--muted); }
+
+  /* HERO */
+  #hero { height: 100svh; display: flex; flex-direction: column; justify-content: flex-end; padding: 0 3.5rem 5rem; position: relative; overflow: hidden; }
+  .hero-bg { position: absolute; inset: 0; background: radial-gradient(ellipse 60% 50% at 70% 40%, rgba(120,90,55,0.06) 0%, transparent 70%), radial-gradient(ellipse 40% 60% at 20% 80%, rgba(60,80,120,0.04) 0%, transparent 70%); transition: opacity 0.5s; }
+  .hero-bg.has-photo { background-size: cover; background-position: center; background-repeat: no-repeat; }
+  .hero-bg.has-photo::after { content: ''; position: absolute; inset: 0; background: linear-gradient(to top, rgba(8,7,5,0.88) 0%, rgba(8,7,5,0.45) 50%, rgba(8,7,5,0.3) 100%); }
+  .hero-grain { position: absolute; inset: 0; opacity: 0.035; background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E"); background-size: 200px 200px; pointer-events: none; }
+  .hero-eyebrow { font-family: var(--ff-mono); font-size: 0.62rem; letter-spacing: 0.35em; text-transform: uppercase; color: var(--accent); margin-bottom: 1.5rem; opacity: 0; animation: fadeUp 0.8s ease 0.3s forwards; }
+  .hero-title { font-size: clamp(3.5rem, 8vw, 7.5rem); font-weight: 300; line-height: 0.92; letter-spacing: -0.01em; opacity: 0; animation: fadeUp 0.9s ease 0.5s forwards; }
+  .hero-title em { font-style: italic; color: var(--muted); }
+  .hero-meta { display: flex; align-items: center; gap: 2rem; margin-top: 3rem; opacity: 0; animation: fadeUp 0.8s ease 0.7s forwards; }
+  .hero-meta-line { width: 48px; height: 1px; background: var(--faint); }
+  .hero-meta-text { font-family: var(--ff-mono); font-size: 0.6rem; letter-spacing: 0.3em; text-transform: uppercase; color: var(--muted); }
+  .scroll-cue { position: absolute; bottom: 2.5rem; right: 3.5rem; display: flex; flex-direction: column; align-items: center; gap: 0.5rem; opacity: 0; animation: fadeUp 0.8s ease 1s forwards; }
+  .scroll-cue-text { font-family: var(--ff-mono); font-size: 0.52rem; letter-spacing: 0.35em; text-transform: uppercase; color: var(--muted); writing-mode: vertical-rl; }
+  .scroll-cue-bar { width: 1px; height: 60px; background: linear-gradient(to bottom, var(--muted) 0%, transparent 100%); animation: scrollBar 2s ease-in-out infinite; }
+  @keyframes scrollBar { 0%, 100% { opacity: 0.4; transform: scaleY(1) translateY(0); } 50% { opacity: 1; transform: scaleY(0.6) translateY(10px); } }
+
+  /* SECTIONS */
+  section { padding: 7rem 3.5rem; }
+  .section-header { display: flex; align-items: baseline; gap: 2rem; margin-bottom: 5rem; border-bottom: 1px solid var(--faint); padding-bottom: 1.5rem; }
+  .section-label { font-family: var(--ff-mono); font-size: 0.62rem; letter-spacing: 0.35em; text-transform: uppercase; color: var(--accent); }
+  .section-num { font-family: var(--ff-mono); font-size: 0.55rem; letter-spacing: 0.2em; color: var(--faint); margin-left: auto; }
+
+  /* FILMS */
+  #films { background: var(--bg); }
+  .films-list { display: flex; flex-direction: column; }
+  .film-card { display: grid; grid-template-columns: 1fr 1fr; border-top: 1px solid var(--faint); cursor: none; transition: background 0.4s ease; }
+  .film-card:last-child { border-bottom: 1px solid var(--faint); }
+  .film-card:hover { background: var(--surface); }
+  .film-card-info { padding: 3.5rem 0; display: flex; flex-direction: column; justify-content: space-between; gap: 1.5rem; }
+  .film-tags { display: flex; gap: 1rem; align-items: center; }
+  .film-tag { font-family: var(--ff-mono); font-size: 0.55rem; letter-spacing: 0.3em; text-transform: uppercase; color: var(--muted); border: 1px solid var(--faint); padding: 0.3em 0.8em; }
+  .film-tag.accent { color: var(--accent); border-color: var(--accent); }
+  .film-title { font-size: clamp(2rem, 3.5vw, 3.2rem); font-weight: 300; line-height: 1.05; letter-spacing: -0.01em; margin-top: 1.5rem; }
+  .film-title em { font-style: italic; }
+  .film-desc { font-size: 1rem; line-height: 1.7; color: var(--muted); max-width: 38ch; font-weight: 300; }
+  .film-year { font-family: var(--ff-mono); font-size: 0.6rem; letter-spacing: 0.25em; color: var(--muted); }
+  .film-card-visual { display: flex; align-items: center; justify-content: flex-end; padding: 2rem 0 2rem 3rem; }
+  .film-thumb { width: 100%; aspect-ratio: 16/9; position: relative; overflow: hidden; display: flex; align-items: center; justify-content: center; }
+  .film-thumb::after { content: '▶'; position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-size: 2rem; color: rgba(230,221,208,0); background: rgba(8,7,5,0); transition: all 0.3s ease; pointer-events: none; }
+  .film-card:hover .film-thumb::after { color: rgba(230,221,208,0.9); background: rgba(8,7,5,0.4); }
+  .film-thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .film-placeholder-text { font-family: var(--ff-mono); font-size: 0.5rem; letter-spacing: 0.25em; color: var(--faint); text-transform: uppercase; text-align: center; line-height: 2; }
+  .film-card:nth-child(even) { direction: rtl; }
+  .film-card:nth-child(even) > * { direction: ltr; }
+  .film-card:nth-child(even) .film-card-visual { padding: 2rem 3rem 2rem 0; justify-content: flex-start; }
+  .ft-1 { background: linear-gradient(160deg, #1a1410 0%, #2a1f15 40%, #0e0c0a 100%); }
+  .ft-2 { background: linear-gradient(160deg, #10141a 0%, #151f2a 40%, #0a0e10 100%); }
+  .ft-3 { background: linear-gradient(160deg, #14100a 0%, #221a0e 50%, #0c0a08 100%); }
+
+  /* PHOTOS */
+  #photos { background: var(--surface); }
+  .photo-grid { display: grid; grid-template-columns: repeat(var(--photo-cols), 1fr); gap: 0.6rem; }
+  .photo-item { position: relative; overflow: hidden; cursor: none; }
+  .photo-item::after { content: ''; position: absolute; inset: 0; background: rgba(8,7,5,0); transition: background 0.4s ease; }
+  .photo-item:hover::after { background: rgba(8,7,5,0.3); }
+  .photo-item.tall { grid-row: span 2; }
+  .photo-item.wide { grid-column: span 2; }
+  .photo-img { width: 100%; height: 100%; min-height: 240px; object-fit: cover; display: block; transition: transform 0.8s cubic-bezier(0.25,0.46,0.45,0.94); }
+  .photo-item:hover .photo-img { transform: scale(1.04); }
+  .photo-caption { position: absolute; bottom: 0; left: 0; right: 0; padding: 1.5rem; background: linear-gradient(to top, rgba(8,7,5,0.85) 0%, transparent 100%); transform: translateY(100%); transition: transform 0.4s ease; z-index: 1; }
+  .photo-item:hover .photo-caption { transform: translateY(0); }
+  .photo-caption-title { font-family: var(--ff-mono); font-size: 0.58rem; letter-spacing: 0.28em; text-transform: uppercase; color: var(--text); }
+  .photo-caption-loc { font-size: 0.85rem; font-style: italic; color: var(--muted); margin-top: 0.25rem; }
+
+  /* ABOUT */
+  #about { background: var(--bg); }
+  .about-grid { display: grid; grid-template-columns: 1fr 2fr; gap: 6rem; align-items: start; }
+  .about-portrait { aspect-ratio: 3/4; background: var(--card); overflow: hidden; }
+  .about-portrait img, .about-portrait svg { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .about-name { font-size: clamp(2.5rem, 4vw, 4rem); font-weight: 300; line-height: 1.05; margin-bottom: 2rem; }
+  .about-name em { font-style: italic; color: var(--muted); }
+  .about-bio { font-size: 1.15rem; line-height: 1.85; color: var(--muted); font-weight: 300; max-width: 55ch; margin-bottom: 2rem; }
+  .about-stats { display: flex; flex-wrap: wrap; gap: 0; margin: 1rem 0 2rem; max-width: 380px; }
+  .about-stat { padding: 1.5rem 2rem 1.5rem 0; border-top: 1px solid var(--faint); flex: 0 0 auto; }
+  .about-stat-num { font-size: 2.2rem; font-weight: 300; line-height: 1; letter-spacing: -0.02em; margin-bottom: 0.4rem; }
+  .about-stat-label { font-family: var(--ff-mono); font-size: 0.55rem; letter-spacing: 0.3em; text-transform: uppercase; color: var(--muted); }
+  .about-disciplines { display: flex; flex-wrap: wrap; gap: 0.5rem; }
+  .discipline-tag { font-family: var(--ff-mono); font-size: 0.58rem; letter-spacing: 0.25em; text-transform: uppercase; color: var(--muted); border: 1px solid var(--faint); padding: 0.5em 1em; }
+  .photo-filters { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-bottom: 1.5rem; padding: 0 0.2rem; }
+  .photo-filter-btn { font-family: var(--ff-mono); font-size: 0.55rem; letter-spacing: 0.22em; text-transform: uppercase; color: var(--muted); background: none; border: 1px solid var(--faint); padding: 0.5em 1.2em; cursor: pointer; transition: color 0.3s, border-color 0.3s; }
+  .photo-filter-btn:hover { color: var(--text); border-color: var(--muted); }
+  .photo-filter-btn.active { color: var(--accent); border-color: var(--accent); }
+  /* SLIDESHOW */
+  .slideshow { position: relative; width: 100%; aspect-ratio: 16/7; overflow: hidden; background: var(--card); }
+  .slideshow-track { display: flex; width: 100%; height: 100%; transition: transform 0.7s cubic-bezier(0.25,0.46,0.45,0.94); }
+  .slideshow-slide { flex: 0 0 100%; width: 100%; height: 100%; position: relative; }
+  .slideshow-slide img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .slideshow-slide .ss-caption { position: absolute; bottom: 0; left: 0; right: 0; padding: 2rem 3rem; background: linear-gradient(to top, rgba(8,7,5,0.7) 0%, transparent 100%); }
+  .slideshow-slide .ss-caption-title { font-family: var(--ff-mono); font-size: 0.6rem; letter-spacing: 0.28em; text-transform: uppercase; color: var(--text); }
+  .slideshow-slide .ss-caption-loc { font-size: 0.9rem; font-style: italic; color: var(--muted); margin-top: 0.2rem; }
+  .slideshow-nav { position: absolute; top: 50%; transform: translateY(-50%); background: rgba(8,7,5,0.5); border: 1px solid var(--faint); color: var(--muted); font-size: 1rem; width: 44px; height: 44px; cursor: pointer; transition: all 0.2s; display: flex; align-items: center; justify-content: center; font-family: var(--ff-mono); backdrop-filter: blur(4px); }
+  .slideshow-nav:hover { border-color: var(--text); color: var(--text); }
+  .slideshow-prev { left: 1.5rem; }
+  .slideshow-next { right: 1.5rem; }
+  .slideshow-dots { position: absolute; bottom: 1.2rem; left: 50%; transform: translateX(-50%); display: flex; gap: 0.5rem; }
+  .slideshow-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--faint); cursor: pointer; transition: background 0.3s; border: none; padding: 0; }
+  .slideshow-dot.active { background: var(--accent); }
+  @media (max-width: 768px) {
+    .slideshow { aspect-ratio: 4/3; }
+    .slideshow-nav { width: 36px; height: 36px; font-size: 0.85rem; }
+    .slideshow-prev { left: 0.8rem; }
+    .slideshow-next { right: 0.8rem; }
+  }
+
+  .gallery-link { font-family: var(--ff-mono); font-size: 0.62rem; letter-spacing: 0.25em; text-transform: uppercase; color: var(--accent); text-decoration: none; border: 1px solid var(--accent); padding: 0.8em 2em; transition: background 0.3s, color 0.3s; }
+  .gallery-link:hover { background: var(--accent); color: var(--bg); }
+
+  /* CONTACT */
+  #contact { background: var(--surface); min-height: 60vh; display: flex; flex-direction: column; justify-content: center; padding: 8rem 3.5rem; }
+  .contact-inner { max-width: 900px; }
+  .contact-headline { font-size: clamp(3rem, 6vw, 5.5rem); font-weight: 300; line-height: 1.05; margin-bottom: 3rem; }
+  .contact-headline em { font-style: italic; color: var(--muted); }
+  .contact-email { font-family: var(--ff-display); font-size: clamp(1.2rem, 2.5vw, 2rem); font-weight: 300; color: var(--accent); text-decoration: none; display: inline-flex; align-items: center; gap: 1rem; border-bottom: 1px solid var(--faint); padding-bottom: 0.5rem; transition: color 0.3s, border-color 0.3s; margin-bottom: 3rem; }
+  .contact-email:hover { color: var(--text); border-color: var(--muted); }
+  .contact-links { display: flex; gap: 2.5rem; flex-wrap: wrap; }
+  .contact-link { font-family: var(--ff-mono); font-size: 0.62rem; letter-spacing: 0.3em; text-transform: uppercase; color: var(--muted); text-decoration: none; transition: color 0.3s; }
+  .contact-link:hover { color: var(--text); }
+
+  footer { background: var(--bg); padding: 2rem 3.5rem; display: flex; justify-content: space-between; align-items: center; border-top: 1px solid var(--faint); }
+  .footer-copy { font-family: var(--ff-mono); font-size: 0.55rem; letter-spacing: 0.25em; color: var(--muted); text-transform: uppercase; }
+
+  /* ── LIGHT MODE ─────────────────────────────── */
+  body.light {
+    --bg: #f5f2ee; --surface: #eeeae4; --card: #e8e3dc;
+    --text: #1a1510; --muted: #7a6e62; --faint: #d0c8be;
+  }
+
+  /* ── MODE TOGGLE ────────────────────────────── */
+  .mode-toggle { background: none; border: 1px solid var(--faint); color: var(--muted); font-family: var(--ff-mono); font-size: 0.6rem; letter-spacing: 0.2em; padding: 0.4em 0.8em; cursor: pointer; transition: all 0.2s; position: relative; z-index: 1; }
+  .mode-toggle:hover { border-color: var(--muted); color: var(--text); }
+
+  /* ── HERO CTA ───────────────────────────────── */
+  .hero-cta { display: inline-flex; align-items: center; gap: 0.8rem; font-family: var(--ff-mono); font-size: 0.62rem; letter-spacing: 0.28em; text-transform: uppercase; color: var(--accent); border: 1px solid var(--accent); padding: 0.9em 1.8em; text-decoration: none; cursor: pointer; background: none; transition: background 0.3s, color 0.3s; margin-top: 2.5rem; opacity: 0; animation: fadeUp 0.8s ease 0.9s forwards; }
+  .hero-cta:hover { background: var(--accent); color: var(--bg); }
+
+  /* ── AWARDS ─────────────────────────────────── */
+  #awards { background: var(--card); }
+  body.light #awards { background: var(--surface); }
+  .awards-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0; }
+  .award-item { padding: 2.5rem 2rem 2.5rem 0; border-top: 1px solid var(--faint); }
+  .award-image { width: 100%; max-width: 220px; height: auto; margin-bottom: 1.2rem; display: block; }
+  .award-title { font-size: 1.1rem; font-weight: 300; margin-bottom: 0.5rem; line-height: 1.3; }
+  .award-festival { font-family: var(--ff-mono); font-size: 0.55rem; letter-spacing: 0.2em; text-transform: uppercase; color: var(--muted); margin-bottom: 0.3rem; }
+  .award-year { font-family: var(--ff-mono); font-size: 0.52rem; letter-spacing: 0.2em; color: var(--accent); }
+  @media (max-width: 768px) { .awards-grid { grid-template-columns: 1fr; } .award-item { padding: 1.5rem 0; } }
+
+  /* ── CONTACT FORM ───────────────────────────── */
+  .contact-form { margin-top: 3rem; display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; max-width: 700px; }
+  .cf-group { display: flex; flex-direction: column; gap: 0.4rem; }
+  .cf-group.full { grid-column: 1 / -1; }
+  .cf-label { font-family: var(--ff-mono); font-size: 0.52rem; letter-spacing: 0.25em; text-transform: uppercase; color: var(--muted); }
+  .cf-input { background: transparent; border: none; border-bottom: 1px solid var(--faint); color: var(--text); font-family: var(--ff-display); font-size: 1rem; font-weight: 300; padding: 0.6em 0; outline: none; transition: border-color 0.3s; width: 100%; }
+  .cf-input:focus { border-color: var(--accent); }
+  textarea.cf-input { resize: none; min-height: 100px; }
+  .cf-submit { font-family: var(--ff-mono); font-size: 0.62rem; letter-spacing: 0.28em; text-transform: uppercase; color: var(--bg); background: var(--accent); border: none; padding: 0.9em 2em; cursor: pointer; transition: opacity 0.3s; align-self: flex-end; }
+  .cf-submit:hover { opacity: 0.85; }
+  .cf-sent { display: none; font-family: var(--ff-mono); font-size: 0.6rem; letter-spacing: 0.25em; text-transform: uppercase; color: var(--success, oklch(0.65 0.10 145)); margin-top: 1rem; }
+  @media (max-width: 640px) { .contact-form { grid-template-columns: 1fr; } }
+
+  /* ── PHOTO LIGHTBOX ─────────────────────────── */
+  #photo-lightbox { display: none; position: fixed; inset: 0; z-index: 500; background: rgba(5,4,3,0.97); align-items: center; justify-content: center; }
+  .plb-img { max-width: 90vw; max-height: 85vh; object-fit: contain; display: block; }
+  .plb-nav { position: absolute; top: 50%; transform: translateY(-50%); background: none; border: 1px solid var(--faint); color: var(--muted); font-size: 1.2rem; width: 48px; height: 48px; cursor: pointer; transition: all 0.2s; display: flex; align-items: center; justify-content: center; font-family: var(--ff-mono); }
+  .plb-nav:hover { border-color: var(--text); color: var(--text); }
+  .plb-prev { left: 2rem; }
+  .plb-next { right: 2rem; }
+  .plb-close { position: absolute; top: 2rem; right: 2rem; background: none; border: none; color: var(--muted); font-size: 2rem; cursor: pointer; line-height: 1; }
+  .plb-caption { position: absolute; bottom: 2rem; left: 50%; transform: translateX(-50%); font-family: var(--ff-mono); font-size: 0.55rem; letter-spacing: 0.28em; text-transform: uppercase; color: var(--muted); white-space: nowrap; }
+  .plb-placeholder { width: min(800px,90vw); aspect-ratio: 4/3; background: var(--card); display: flex; align-items: center; justify-content: center; font-family: var(--ff-mono); font-size: 0.58rem; letter-spacing: 0.2em; color: var(--faint); text-transform: uppercase; }
+
+  /* ── RESPONSIVE ─────────────────────────────── */
+
+  /* Tablet (iPad) */
+  @media (max-width: 1024px) {
+    nav { padding: 1.5rem 2rem; }
+    section { padding: 5rem 2rem; }
+    #hero { padding: 0 2rem 4rem; }
+    .film-card { grid-template-columns: 1fr; }
+    .film-card:nth-child(even) { direction: ltr; }
+    .film-card:nth-child(even) .film-card-visual { padding: 0 0 2rem; justify-content: flex-start; }
+    .film-card-visual { padding: 0 0 2rem; }
+    .about-grid { grid-template-columns: 1fr; gap: 3rem; }
+    .about-portrait { max-width: 340px; }
+    .scroll-cue { right: 2rem; }
+    footer { padding: 1.5rem 2rem; }
+    .contact-inner { padding: 0; }
+    #contact { padding: 6rem 2rem; }
+  }
+
+  /* Mobile (iPhone) */
+  @media (max-width: 640px) {
+    nav { padding: 1.2rem 1.5rem; }
+    .nav-links { display: none; }
+    .nav-menu-btn { display: flex; }
+
+    section { padding: 4rem 1.5rem; }
+    #hero { padding: 0 1.5rem 3.5rem; height: 100svh; }
+    .hero-meta { flex-wrap: wrap; gap: 1rem; }
+    .scroll-cue { display: none; }
+
+    .section-header { margin-bottom: 2.5rem; }
+
+    /* Films: fully stacked */
+    .film-card { grid-template-columns: 1fr; border-top: 1px solid var(--faint); }
+    .film-card:nth-child(even) { direction: ltr; }
+    .film-card-info { padding: 2rem 0 1rem; gap: 1rem; }
+    .film-card-visual { padding: 0 0 2rem; justify-content: flex-start; }
+    .film-card:nth-child(even) .film-card-visual { padding: 0 0 2rem; justify-content: flex-start; }
+
+    /* Photos: 1 column */
+    :root { --photo-cols: 1 !important; }
+    .photo-item.tall, .photo-item.wide { grid-row: span 1; grid-column: span 1; }
+    .photo-caption { transform: translateY(0); }
+
+    /* About */
+    .about-grid { grid-template-columns: 1fr; gap: 2rem; }
+    .about-portrait { max-width: 200px; aspect-ratio: 1/1; }
+    .about-stats { max-width: 100%; }
+    .about-stat { padding: 1rem 0.5rem 1rem 0; }
+    .about-stat-num { font-size: 1.6rem; }
+
+    /* Contact */
+    #contact { padding: 5rem 1.5rem; }
+    .contact-links { gap: 1.5rem; }
+
+    footer { padding: 1.5rem; flex-direction: column; gap: 1rem; align-items: flex-start; }
+
+    /* Intro */
+    .intro-name { font-size: clamp(2.2rem, 12vw, 4rem); letter-spacing: 0.15em; }
+  }
+
+  /* Mobile nav overlay */
+  .nav-menu-btn { display: none; background: none; border: none; color: var(--muted); cursor: pointer; padding: 0; position: relative; z-index: 1; flex-direction: column; gap: 5px; }
+  .nav-menu-btn span { display: block; width: 22px; height: 1px; background: var(--text); transition: all 0.3s; }
+  .nav-menu-btn.open span:nth-child(1) { transform: translateY(6px) rotate(45deg); }
+  .nav-menu-btn.open span:nth-child(2) { opacity: 0; }
+  .nav-menu-btn.open span:nth-child(3) { transform: translateY(-6px) rotate(-45deg); }
+
+  .nav-mobile-overlay { display: none; position: fixed; inset: 0; background: rgba(5,4,3,0.97); z-index: 90; flex-direction: column; align-items: center; justify-content: center; gap: 2.5rem; }
+  .nav-mobile-overlay.open { display: flex; }
+  .nav-mobile-overlay a { font-family: var(--ff-display); font-size: 2.2rem; font-weight: 300; letter-spacing: 0.05em; color: var(--muted); text-decoration: none; transition: color 0.3s; }
+  .nav-mobile-overlay a:hover { color: var(--text); }
+
+  @keyframes fadeUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+  .reveal-el { opacity: 0; transform: translateY(32px); transition: opacity 0.9s ease, transform 0.9s ease; }
+  .reveal-el.in-view { opacity: 1; transform: translateY(0); }
+
+  /* TWEAKS PANEL */
+  #tweaks-panel { display: none; position: fixed; bottom: 2rem; right: 2rem; width: 260px; background: #1a1710; border: 1px solid var(--faint); padding: 1.5rem; z-index: 900; font-family: var(--ff-mono); }
+  #tweaks-panel.visible { display: block; }
+  .tp-title { font-size: 0.62rem; letter-spacing: 0.35em; text-transform: uppercase; color: var(--accent); margin-bottom: 1.2rem; display: flex; justify-content: space-between; align-items: center; }
+  .tp-close { cursor: pointer; background: none; border: none; color: var(--muted); font-size: 1rem; }
+  .tp-label { font-size: 0.55rem; letter-spacing: 0.25em; text-transform: uppercase; color: var(--muted); margin: 1rem 0 0.5rem; }
+  .tp-options { display: flex; gap: 0.4rem; flex-wrap: wrap; }
+  .tp-btn { font-family: var(--ff-mono); font-size: 0.55rem; letter-spacing: 0.2em; text-transform: uppercase; padding: 0.4em 0.8em; background: none; border: 1px solid var(--faint); color: var(--muted); cursor: pointer; transition: all 0.2s; }
+  .tp-btn:hover, .tp-btn.active { border-color: var(--accent); color: var(--accent); }
+  .tp-color { width: 24px; height: 24px; border-radius: 50%; border: 2px solid transparent; cursor: pointer; transition: border-color 0.2s; }
+  .tp-color.active { border-color: var(--text); }
+</style>
+</head>
+<body>
+
+<div id="cursor"></div>
+
+<div id="intro">
+  <div class="intro-name" id="intro-first"></div>
+  <div class="intro-name" id="intro-last"></div>
+  <div class="intro-line" id="intro-line"></div>
+  <div class="intro-sub" id="intro-sub"></div>
+</div>
+
+<nav>
+  <a href="#hero" class="nav-logo" id="nav-name" aria-label="Louis Lamprecht — home"></a>
+  <ul class="nav-links">
+    <li><a href="index.html">Home</a></li>
+    <li><a href="films.html">Films</a></li>
+    <li><a href="gallery.html">Photography</a></li>
+    <li><a href="projects.html">Projects</a></li>
+    <li><a href="#about">About</a></li>
+    <li><a href="#contact">Contact</a></li>
+    <li><button class="mode-toggle" id="mode-toggle">Light</button></li>
+  </ul>
+  <button class="nav-menu-btn" id="nav-menu-btn" aria-label="Menu">
+    <span></span><span></span><span></span>
+  </button>
+</nav>
+
+<div class="nav-mobile-overlay" id="nav-mobile-overlay">
+  <a href="index.html" onclick="closeMobileNav()">Home</a>
+  <a href="films.html">Films</a>
+  <a href="gallery.html">Photography</a>
+  <a href="projects.html">Projects</a>
+  <a href="#about"   onclick="closeMobileNav()">About</a>
+  <a href="#contact" onclick="closeMobileNav()">Contact</a>
+</div>
+
+<section id="hero" data-screen-label="Hero">
+  <div class="hero-bg" id="hero-bg-el"></div>
+  <div class="hero-grain"></div>
+  <div class="hero-eyebrow"></div>
+  <h1 class="hero-title" id="hero-title">Louis<br><em>Lamprecht</em></h1>
+  <div class="hero-meta">
+    <div class="hero-meta-line"></div>
+    <span class="hero-meta-text" id="hero-tagline">Documentary &nbsp;&nbsp;·&nbsp;&nbsp; Narrative Film &nbsp;&nbsp;·&nbsp;&nbsp; Photography</span>
+  </div>
+  <button class="hero-cta" id="hero-reel-btn">▶ &nbsp;Watch Reel</button>
+  <div class="scroll-cue">
+    <span class="scroll-cue-text">Scroll</span>
+    <div class="scroll-cue-bar"></div>
+  </div>
+</section>
+
+<section id="films" data-screen-label="Films">
+  <div class="section-header">
+    <span class="section-label">Films</span>
+    <span class="section-num">01 / 04</span>
+  </div>
+  <div class="slideshow" id="film-slideshow">
+    <div class="slideshow-track" id="film-ss-track"></div>
+    <button class="slideshow-nav slideshow-prev" id="fss-prev">&#8592;</button>
+    <button class="slideshow-nav slideshow-next" id="fss-next">&#8594;</button>
+    <div class="slideshow-dots" id="film-ss-dots"></div>
+  </div>
+  <div style="text-align:center;margin-top:2.5rem;">
+    <a href="films.html" class="gallery-link">View All Films &nbsp;→</a>
+  </div>
+</section>
+
+<section id="photos" data-screen-label="Photography">
+  <div class="section-header">
+    <span class="section-label">Photography</span>
+    <span class="section-num">02 / 04</span>
+  </div>
+  <div class="slideshow" id="slideshow">
+    <div class="slideshow-track" id="slideshow-track"></div>
+    <button class="slideshow-nav slideshow-prev" id="ss-prev">&#8592;</button>
+    <button class="slideshow-nav slideshow-next" id="ss-next">&#8594;</button>
+    <div class="slideshow-dots" id="slideshow-dots"></div>
+  </div>
+  <div style="text-align:center;margin-top:2.5rem;">
+    <a href="gallery.html" class="gallery-link" id="gallery-link">View Full Gallery &nbsp;→</a>
+  </div>
+</section>
+
+<section id="awards" data-screen-label="Awards">
+  <div class="section-header">
+    <span class="section-label">Awards &amp; Press</span>
+    <span class="section-num">03 / 05</span>
+  </div>
+  <div class="awards-grid" id="awards-grid"></div>
+</section>
+
+<section id="about" data-screen-label="About">
+  <div class="section-header">
+    <span class="section-label">About</span>
+    <span class="section-num">04 / 05</span>
+  </div>
+  <div class="about-grid">
+    <div class="about-portrait reveal-el" id="about-portrait"></div>
+    <div class="reveal-el" style="transition-delay:0.15s">
+      <h2 class="about-name" id="about-name">Louis<br><em>Lamprecht</em></h2>
+      <p class="about-bio" id="about-bio"></p>
+      <p class="about-bio" id="about-bio2"></p>
+      <div class="about-stats">
+        <div class="about-stat"><div class="about-stat-num" id="stat-films">12+</div><div class="about-stat-label">Films</div></div>
+        <div class="about-stat"><div class="about-stat-num" id="stat-festivals">6</div><div class="about-stat-label">Festivals</div></div>
+        <div class="about-stat"><div class="about-stat-num" id="stat-images">200+</div><div class="about-stat-label">Images</div></div>
+      </div>
+      <div class="about-disciplines" id="about-disciplines"></div>
+    </div>
+  </div>
+</section>
+
+<section id="contact" data-screen-label="Contact">
+  <div class="section-header">
+    <span class="section-label">Contact</span>
+    <span class="section-num">05 / 05</span>
+  </div>
+  <div class="contact-inner reveal-el">
+    <h2 class="contact-headline">Let's make<br><em>something</em><br>together.</h2>
+    <a class="contact-email" id="contact-email" href="#">louis@louisl.com</a>
+    <div class="contact-links" id="contact-links"></div>
+    <form class="contact-form" id="contact-form">
+      <div class="cf-group">
+        <label class="cf-label">Name</label>
+        <input class="cf-input" type="text" name="name" placeholder="Your name" required>
+      </div>
+      <div class="cf-group">
+        <label class="cf-label">Email</label>
+        <input class="cf-input" type="email" name="email" placeholder="your@email.com" required>
+      </div>
+      <div class="cf-group full">
+        <label class="cf-label">Message</label>
+        <textarea class="cf-input" name="message" placeholder="Tell me about your project..." required></textarea>
+      </div>
+      <div class="cf-group full" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:1rem;">
+        <button type="submit" class="cf-submit">Send Message</button>
+        <span class="cf-sent" id="cf-sent">Message sent — I'll be in touch.</span>
+      </div>
+    </form>
+  </div>
+</section>
+
+<footer>
+  <span class="footer-copy" id="footer-name">&copy; 2026 Louis Lamprecht</span>
+  <div style="display:flex;align-items:center;gap:2rem;">
+    <span class="footer-copy"></span>
+    <a href="Admin.html" class="footer-copy" style="color:var(--faint);text-decoration:none;transition:color 0.3s;" onmouseover="this.style.color='var(--muted)'" onmouseout="this.style.color='var(--faint)'">Admin</a>
+  </div>
+</footer>
+
+<!-- PHOTO LIGHTBOX -->
+<div id="photo-lightbox">
+  <button class="plb-close" id="plb-close">&times;</button>
+  <button class="plb-nav plb-prev" id="plb-prev">&#8592;</button>
+  <img class="plb-img" id="plb-img" alt="" style="display:none">
+  <div class="plb-placeholder" id="plb-placeholder" style="display:none">Photo placeholder</div>
+  <button class="plb-nav plb-next" id="plb-next">&#8594;</button>
+  <div class="plb-caption" id="plb-caption"></div>
+</div>
+
+<!-- VIDEO LIGHTBOX -->
+<div id="video-lightbox" style="display:none;position:fixed;inset:0;z-index:500;background:rgba(5,4,3,0.96);align-items:center;justify-content:center;flex-direction:column;">
+  <button id="lightbox-close" style="position:absolute;top:2rem;right:2rem;background:none;border:none;color:var(--muted);font-size:2rem;cursor:pointer;font-family:var(--ff-mono);line-height:1;">&times;</button>
+  <div id="lightbox-meta" style="font-family:var(--ff-mono);font-size:0.58rem;letter-spacing:0.3em;text-transform:uppercase;color:var(--muted);margin-bottom:1.5rem;text-align:center;"></div>
+  <div id="lightbox-frame" style="width:min(900px,92vw);aspect-ratio:16/9;background:#000;position:relative;">
+    <iframe id="lightbox-iframe" src="" frameborder="0" allow="autoplay;fullscreen" allowfullscreen style="width:100%;height:100%;display:block;"></iframe>
+  </div>
+  <div id="lightbox-no-video" style="display:none;width:min(900px,92vw);font-family:var(--ff-mono);font-size:0.6rem;letter-spacing:0.25em;text-transform:uppercase;color:var(--faint);text-align:center;padding:4rem 2rem;border:1px solid var(--faint);">No video link added yet.<br><span style="color:var(--muted);margin-top:0.8rem;display:block">Add one in Admin → Films</span></div>
+</div>
+
+<div id="tweaks-panel">
+  <div class="tp-title">Tweaks <button class="tp-close" id="tp-close-btn">&times;</button></div>
+  <div class="tp-label">Photo Grid</div>
+  <div class="tp-options">
+    <button class="tp-btn" data-cols="2">2-col</button>
+    <button class="tp-btn active" data-cols="3">3-col</button>
+    <button class="tp-btn" data-cols="4">4-col</button>
+  </div>
+  <div class="tp-label">Accent</div>
+  <div class="tp-options">
+    <div class="tp-color active" data-accent="oklch(0.70 0.09 58)"  style="background:oklch(0.70 0.09 58)"></div>
+    <div class="tp-color"        data-accent="oklch(0.70 0.09 230)" style="background:oklch(0.70 0.09 230)"></div>
+    <div class="tp-color"        data-accent="oklch(0.70 0.09 15)"  style="background:oklch(0.70 0.09 15)"></div>
+    <div class="tp-color"        data-accent="oklch(0.70 0.09 145)" style="background:oklch(0.70 0.09 145)"></div>
+  </div>
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-storage-compat.js"></script>
+<script>
+// Firebase data layer for Louis Lamprecht Portfolio
+// Requires Firebase compat SDKs loaded before this script:
+//   firebase-app-compat.js, firebase-firestore-compat.js, firebase-storage-compat.js
+
+const firebaseConfig = {
+  apiKey:            "AIzaSyCvcw4ItbhTG10cTVSQGJLoF74fjrKW1jc",
+  authDomain:        "portfolio-3acbc.firebaseapp.com",
+  projectId:         "portfolio-3acbc",
+  storageBucket:     "portfolio-3acbc.firebasestorage.app",
+  messagingSenderId: "869692298519",
+  appId:             "1:869692298519:web:0de40d2458f5bdb5d35352"
+};
+
+if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+const db      = firebase.firestore();
+const storage = firebase.storage();
+const DOC_REF = db.collection('portfolio').doc('main');
+const LS_KEY  = 'll_portfolio';
+
+// ── DEFAULT DATA ──────────────────────────────────────────────
+const DEFAULT_DATA = {
+  info: {
+    name: 'Louis Lamprecht', tagline: 'Documentary · Film · Photography',
+    bio:  'Louis Lamprecht is a documentary filmmaker and photographer working across narrative film, documentary, landscape, and portraiture. His work is drawn to the quiet edges of human experience — the moments between words, the light that outlasts the day.',
+    bio2: 'Based between Cape Town and Johannesburg, he has screened work at festivals internationally and exhibited photography across South Africa and Europe.',
+    email: 'louis@louisl.com', vimeo: '#', instagram: '#', imdb: '#',
+    showreelUrl: '', heroBg: null, heroBgPosition: '50% 50%', portrait: null,
+    statFilms: '12+', statFestivals: '6', statImages: '200+',
+    disciplines: ['Documentary', 'Narrative Film', 'Landscape', 'Portrait', 'Travel'],
+    photoTags: [],
+    slideshowIds: [],
+    filmSlideshowIds: []
+  },
+  films: [
+    { id: 1, titleMain: 'The Weight of', titleItalic: 'Silence',   year: '2024', type: 'Documentary',    duration: '38 min', format: '4K',  desc: 'A journey through remote highland communities confronting the slow erasure of their traditions in an age of acceleration.', thumb: null, videoUrl: '', gradientClass: 'ft-1' },
+    { id: 2, titleMain: 'After',         titleItalic: 'the Flood', year: '2023', type: 'Narrative Short', duration: '22 min', format: '35mm',desc: 'Two strangers share a single night in a rain-soaked city, each carrying a past neither is ready to speak aloud.', thumb: null, videoUrl: '', gradientClass: 'ft-2' },
+    { id: 3, titleMain: 'Last',          titleItalic: 'Light',     year: '2022', type: 'Documentary',    duration: '52 min', format: '4K',  desc: 'Three photographers at the end of their careers reckon with what the image can and cannot hold.', thumb: null, videoUrl: '', gradientClass: 'ft-3' }
+  ],
+  photos: [
+    { id: 1, title: 'Portrait Series',     location: 'Cape Town, 2024',    span: 'tall',   src: null, tag: '' },
+    { id: 2, title: 'Mountain Light',      location: 'Drakensberg, 2024',  span: 'normal', src: null, tag: '' },
+    { id: 3, title: 'Desert Roads',        location: 'Namibia, 2023',      span: 'normal', src: null, tag: '' },
+    { id: 4, title: 'Coastline, Atlantic', location: 'Western Cape, 2023', span: 'wide',   src: null, tag: '' },
+    { id: 5, title: 'Studio Portrait',     location: 'Johannesburg, 2024', span: 'normal', src: null, tag: '' },
+    { id: 6, title: 'Forest Floor',        location: 'Tsitsikamma, 2022',  span: 'tall',   src: null, tag: '' },
+    { id: 7, title: 'Morning Market',      location: 'Marrakech, 2022',    span: 'normal', src: null, tag: '' }
+  ],
+  awards: [
+    { id: 1, title: 'Best Documentary',   festival: 'Cape Town International Film Festival',         year: '2024', image: null },
+    { id: 2, title: 'Official Selection', festival: 'Encounters South African Documentary Festival', year: '2023', image: null },
+    { id: 3, title: 'Jury Prize',         festival: 'Durban International Film Festival',            year: '2022', image: null }
+  ]
+};
+
+// ── MERGE HELPER ───────────────────────────────────────────────
+function mergeWithDefaults(saved) {
+  return {
+    info:   { ...DEFAULT_DATA.info,   ...(saved.info   || {}) },
+    films:  saved.films   || DEFAULT_DATA.films,
+    photos: saved.photos  || DEFAULT_DATA.photos,
+    awards: saved.awards  || DEFAULT_DATA.awards
+  };
+}
+
+// ── LOAD (cache-first) ────────────────────────────────────────
+// Returns cached data immediately for fast render.
+// Refreshes from Firebase in background and updates cache for next visit.
+function loadData() {
+  // Try cache first
+  try {
+    const raw = localStorage.getItem(LS_KEY);
+    if (raw) {
+      // Refresh in background (fire and forget)
+      DOC_REF.get().then(doc => {
+        if (doc.exists && Object.keys(doc.data()).length > 0) {
+          localStorage.setItem(LS_KEY, JSON.stringify(doc.data()));
+        }
+      }).catch(() => {});
+      return mergeWithDefaults(JSON.parse(raw));
+    }
+  } catch {}
+  // No cache — must wait for Firebase
+  return DOC_REF.get().then(doc => {
+    if (doc.exists && Object.keys(doc.data()).length > 0) {
+      const d = mergeWithDefaults(doc.data());
+      localStorage.setItem(LS_KEY, JSON.stringify(doc.data()));
+      return d;
+    }
+    return JSON.parse(JSON.stringify(DEFAULT_DATA));
+  }).catch(() => JSON.parse(JSON.stringify(DEFAULT_DATA)));
+}
+
+// ── SAVE ───────────────────────────────────────────────────────
+async function saveData(data) {
+  try {
+    await DOC_REF.set(data);
+    localStorage.setItem(LS_KEY, JSON.stringify(data)); // local backup
+  } catch(e) {
+    console.error('Firebase save failed, saving to localStorage only:', e.message);
+    localStorage.setItem(LS_KEY, JSON.stringify(data));
+    throw e; // re-throw so Admin can show error
+  }
+}
+
+// ── IMAGE UPLOAD ───────────────────────────────────────────────
+// dataUrl: base64 string from compressImage()
+// path: e.g. 'hero-bg', 'portrait', 'films/1/thumb', 'photos/3/image'
+// Returns: public download URL string, or null if no image
+async function uploadImage(dataUrl, path) {
+  if (!dataUrl) return null;
+  // If already a https URL (already uploaded), return as-is
+  if (dataUrl.startsWith('http')) return dataUrl;
+  const blob = await fetch(dataUrl).then(r => r.blob());
+  const ext  = blob.type === 'image/png' ? 'png' : 'jpg';
+  const ref  = storage.ref(`portfolio/${path}.${ext}`);
+  const snap = await ref.put(blob, { contentType: blob.type });
+  return await snap.ref.getDownloadURL();
+}
+
+// ── IMAGE COMPRESSION (client-side before upload) ─────────────
+function compressImage(file, maxWidth = 1400, quality = 0.82) {
+  return new Promise(resolve => {
+    const reader = new FileReader();
+    reader.onload = e => {
+      const img = new Image();
+      img.onload = () => {
+        let w = img.width, h = img.height;
+        if (w > maxWidth) { h = Math.round(h * maxWidth / w); w = maxWidth; }
+        const canvas = document.createElement('canvas');
+        canvas.width = w; canvas.height = h;
+        canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+        resolve(canvas.toDataURL('image/jpeg', quality));
+      };
+      img.src = e.target.result;
+    };
+    reader.readAsDataURL(file);
+  });
+}
+
+window.PortfolioFirebase = { loadData, saveData, uploadImage, compressImage, DEFAULT_DATA };
+
+</script>
+<script>
+(async () => {
+const data = await window.PortfolioFirebase.loadData();
+
+// ── HERO BACKGROUND ───────────────────────────────
+const heroBgEl = document.getElementById('hero-bg-el');
+if (data.info.heroBg) {
+  heroBgEl.style.backgroundImage = `url('${data.info.heroBg}')`;
+  heroBgEl.style.backgroundPosition = data.info.heroBgPosition || '50% 50%';
+  heroBgEl.classList.add('has-photo');
+}
+
+// ── POPULATE STATIC FIELDS ──────────────────────
+// Helper: treat null, undefined, empty string, whitespace-only, and '#' as blank
+const isBlank = v => v == null || (typeof v === 'string' && (v.trim() === '' || v.trim() === '#'));
+const setOrHide = (id, value) => {
+  const el = document.getElementById(id);
+  if (!el) return;
+  if (isBlank(value)) { el.style.display = 'none'; }
+  else { el.textContent = value; el.style.display = ''; }
+};
+
+const firstName = data.info.name.split(' ')[0];
+const lastName  = data.info.name.split(' ').slice(1).join(' ');
+
+document.getElementById('hero-tagline').innerHTML = (data.info.tagline || '').replace(/·/g, '&nbsp;&nbsp;·&nbsp;&nbsp;');
+setOrHide('about-bio',  data.info.bio);
+setOrHide('about-bio2', data.info.bio2);
+
+// Stats: hide each individually if blank, hide whole stats row if all blank
+const statPairs = [
+  ['stat-films',     data.info.statFilms],
+  ['stat-festivals', data.info.statFestivals],
+  ['stat-images',    data.info.statImages]
+];
+let anyStat = false;
+statPairs.forEach(([id, val]) => {
+  const el = document.getElementById(id);
+  const wrap = el?.closest('.about-stat');
+  if (isBlank(val)) { if (wrap) wrap.style.display = 'none'; }
+  else { el.textContent = val; anyStat = true; }
+});
+if (!anyStat) {
+  const statsRow = document.querySelector('.about-stats');
+  if (statsRow) statsRow.style.display = 'none';
+}
+
+document.getElementById('footer-name').textContent = `© ${new Date().getFullYear()} ${data.info.name}`;
+
+// Disciplines
+const disciplinesEl = document.getElementById('about-disciplines');
+if (disciplinesEl) {
+  const tags = data.info.disciplines || [];
+  if (tags.length === 0) {
+    disciplinesEl.style.display = 'none';
+  } else {
+    tags.forEach(tag => {
+      if (isBlank(tag)) return;
+      const span = document.createElement('span');
+      span.className = 'discipline-tag';
+      span.textContent = tag;
+      disciplinesEl.appendChild(span);
+    });
+  }
+}
+
+// About name
+const an = document.getElementById('about-name');
+an.innerHTML = `${firstName}<br><em>${lastName}</em>`;
+
+// Portrait
+const ap = document.getElementById('about-portrait');
+if (data.info.portrait) {
+  ap.innerHTML = `<img src="${data.info.portrait}" alt="Portrait of ${data.info.name}">`;
+} else {
+  ap.innerHTML = `<svg width="100%" height="100%" viewBox="0 0 400 530" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid slice"><defs><linearGradient id="apg" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#1c1510"/><stop offset="100%" stop-color="#0a0806"/></linearGradient></defs><rect width="400" height="530" fill="url(#apg)"/><text x="200" y="258" fill="#2a2520" font-family="monospace" font-size="10" text-anchor="middle" letter-spacing="3">PORTRAIT</text><text x="200" y="276" fill="#2a2520" font-family="monospace" font-size="8" text-anchor="middle" letter-spacing="2">to be placed</text></svg>`;
+}
+
+// Contact
+const emailEl = document.getElementById('contact-email');
+if (isBlank(data.info.email)) {
+  emailEl.style.display = 'none';
+} else {
+  emailEl.href = `mailto:${data.info.email}`;
+  emailEl.textContent = data.info.email;
+}
+
+const linksEl = document.getElementById('contact-links');
+[['Vimeo', data.info.vimeo], ['Instagram', data.info.instagram], ['IMDB', data.info.imdb]].forEach(([label, href]) => {
+  if (!isBlank(href)) {
+    const a = document.createElement('a');
+    a.className = 'contact-link';
+    a.href = href; a.textContent = label; a.target = '_blank';
+    linksEl.appendChild(a);
+  }
+});
+
+// ── RENDER FILM SLIDESHOW ────────────────────────
+const gradients = ['ft-1','ft-2','ft-3','ft-1','ft-2','ft-3'];
+const filmsSection = document.getElementById('films');
+const fssTrack = document.getElementById('film-ss-track');
+const fssDots  = document.getElementById('film-ss-dots');
+
+const fssIds = data.info.filmSlideshowIds || [];
+let fssFilms;
+if (fssIds.length > 0) {
+  fssFilms = fssIds.map(id => data.films.find(f => f.id === id)).filter(Boolean);
+} else {
+  fssFilms = (data.films || []).slice(0, 5);
+}
+
+if (!data.films || data.films.length === 0 || fssFilms.length === 0) {
+  if (filmsSection) filmsSection.style.display = 'none';
+} else {
+  let fssIndex = 0;
+  let fssTimer = null;
+
+  fssFilms.forEach((film, i) => {
+    const gc = film.gradientClass || gradients[i % gradients.length];
+    const slide = document.createElement('div');
+    slide.className = 'slideshow-slide';
+
+    const titleParts = [];
+    if (!isBlank(film.titleMain))   titleParts.push(film.titleMain);
+    if (!isBlank(film.titleItalic)) titleParts.push(film.titleItalic);
+    const titleText = titleParts.join(' ');
+
+    const filmCropPos = film.cropPosition || 'center';
+    if (film.thumb) {
+      slide.innerHTML = `<img src="${film.thumb}" alt="${titleText}" style="object-position:${filmCropPos};">`;
+    } else {
+      slide.innerHTML = `<div class="${gc}" style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-family:var(--ff-mono);font-size:0.6rem;letter-spacing:0.2em;color:var(--faint);text-transform:uppercase;">Film</div>`;
+    }
+
+    const captionParts = [];
+    if (titleText) captionParts.push(`<span class="ss-caption-title">${titleText}</span>`);
+    const metaBits = [film.type, film.year].filter(v => !isBlank(v));
+    if (metaBits.length) captionParts.push(`<span class="ss-caption-loc">${metaBits.join(' · ')}</span>`);
+    if (captionParts.length) slide.innerHTML += `<div class="ss-caption">${captionParts.join('<br>')}</div>`;
+
+    fssTrack.appendChild(slide);
+
+    const dot = document.createElement('button');
+    dot.className = 'slideshow-dot' + (i === 0 ? ' active' : '');
+    dot.addEventListener('click', () => fssGoTo(i));
+    fssDots.appendChild(dot);
+  });
+
+  function fssGoTo(i) {
+    fssIndex = i;
+    fssTrack.style.transform = `translateX(-${fssIndex * 100}%)`;
+    fssDots.querySelectorAll('.slideshow-dot').forEach((d, j) => d.classList.toggle('active', j === fssIndex));
+    fssResetTimer();
+  }
+  function fssNext() { fssGoTo((fssIndex + 1) % fssFilms.length); }
+  function fssPrev() { fssGoTo((fssIndex - 1 + fssFilms.length) % fssFilms.length); }
+
+  document.getElementById('fss-next').addEventListener('click', fssNext);
+  document.getElementById('fss-prev').addEventListener('click', fssPrev);
+
+  function fssResetTimer() {
+    if (fssTimer) clearInterval(fssTimer);
+    fssTimer = setInterval(fssNext, 5000);
+  }
+  fssResetTimer();
+
+  if (fssFilms.length <= 1) {
+    document.getElementById('fss-prev').style.display = 'none';
+    document.getElementById('fss-next').style.display = 'none';
+    fssDots.style.display = 'none';
+    if (fssTimer) clearInterval(fssTimer);
+  }
+}
+
+// ── RENDER SLIDESHOW ─────────────────────────────
+const photosSection = document.getElementById('photos');
+const ssTrack = document.getElementById('slideshow-track');
+const ssDots  = document.getElementById('slideshow-dots');
+
+// Get slideshow photos: use selected IDs, or fall back to first 5
+const ssIds = data.info.slideshowIds || [];
+let ssPhotos;
+if (ssIds.length > 0) {
+  ssPhotos = ssIds.map(id => data.photos.find(p => p.id === id)).filter(Boolean);
+} else {
+  ssPhotos = (data.photos || []).slice(0, 5);
+}
+
+if (!data.photos || data.photos.length === 0 || ssPhotos.length === 0) {
+  if (photosSection) photosSection.style.display = 'none';
+} else {
+  let ssIndex = 0;
+  let ssTimer = null;
+
+  ssPhotos.forEach((photo, i) => {
+    const slide = document.createElement('div');
+    slide.className = 'slideshow-slide';
+    const cropPos = photo.cropPosition || 'center';
+    const imgHtml = photo.src
+      ? `<img src="${photo.src}" alt="${photo.title || ''}" style="object-position:${cropPos};">`
+      : `<div style="width:100%;height:100%;background:var(--card);display:flex;align-items:center;justify-content:center;font-family:var(--ff-mono);font-size:0.6rem;letter-spacing:0.2em;color:var(--faint);text-transform:uppercase;">Photo</div>`;
+    const captionParts = [];
+    if (!isBlank(photo.title))    captionParts.push(`<span class="ss-caption-title">${photo.title}</span>`);
+    if (!isBlank(photo.location)) captionParts.push(`<span class="ss-caption-loc">${photo.location}</span>`);
+    const captionHtml = captionParts.length ? `<div class="ss-caption">${captionParts.join('<br>')}</div>` : '';
+    slide.innerHTML = imgHtml + captionHtml;
+    ssTrack.appendChild(slide);
+
+    const dot = document.createElement('button');
+    dot.className = 'slideshow-dot' + (i === 0 ? ' active' : '');
+    dot.addEventListener('click', () => goTo(i));
+    ssDots.appendChild(dot);
+  });
+
+  function goTo(i) {
+    ssIndex = i;
+    ssTrack.style.transform = `translateX(-${ssIndex * 100}%)`;
+    ssDots.querySelectorAll('.slideshow-dot').forEach((d, j) => d.classList.toggle('active', j === ssIndex));
+    resetTimer();
+  }
+
+  function next() { goTo((ssIndex + 1) % ssPhotos.length); }
+  function prev() { goTo((ssIndex - 1 + ssPhotos.length) % ssPhotos.length); }
+
+  document.getElementById('ss-next').addEventListener('click', next);
+  document.getElementById('ss-prev').addEventListener('click', prev);
+
+  function resetTimer() {
+    if (ssTimer) clearInterval(ssTimer);
+    ssTimer = setInterval(next, 5000);
+  }
+  resetTimer();
+
+  // Hide nav arrows if only 1 slide
+  if (ssPhotos.length <= 1) {
+    document.getElementById('ss-prev').style.display = 'none';
+    document.getElementById('ss-next').style.display = 'none';
+    ssDots.style.display = 'none';
+    if (ssTimer) clearInterval(ssTimer);
+  }
+}
+
+// ── INTRO ───────────────────────────────────────
+const introSeen = sessionStorage.getItem('ll_intro_seen');
+if (introSeen) {
+  // Already seen this session — skip animation entirely
+  const introEl = document.getElementById('intro');
+  if (introEl) { introEl.style.display = 'none'; }
+} else {
+  sessionStorage.setItem('ll_intro_seen', '1');
+  function makeChars(text, container) {
+    text.split('').forEach(ch => {
+      const span = document.createElement('span');
+      span.className = 'char' + (ch === ' ' ? ' space' : '');
+      if (ch !== ' ') span.textContent = ch;
+      container.appendChild(span);
+    });
+  }
+  const introFirst = document.getElementById('intro-first');
+  const introLast  = document.getElementById('intro-last');
+  makeChars(firstName.toUpperCase(), introFirst);
+  makeChars(lastName.toUpperCase(), introLast);
+  document.getElementById('intro-sub').textContent = data.info.tagline;
+
+  function animateChars(container, baseDelay, interval) {
+    container.querySelectorAll('.char').forEach((ch, i) => {
+      setTimeout(() => ch.classList.add('visible'), baseDelay + i * interval);
+    });
+  }
+  animateChars(introFirst, 400, 60);
+  animateChars(introLast, 750, 45);
+  setTimeout(() => document.getElementById('intro-line').classList.add('grow'), 1300);
+  setTimeout(() => document.getElementById('intro-sub').classList.add('show'), 1700);
+  setTimeout(() => {
+    document.getElementById('intro').classList.add('fade-out');
+    setTimeout(() => document.getElementById('intro').style.display = 'none', 1200);
+  }, 3000);
+}
+
+// Hero title
+document.getElementById('hero-title').innerHTML = `${firstName}<br><em>${lastName}</em>`;
+
+// ── VIDEO LIGHTBOX ───────────────────────────────
+function getEmbedUrl(url) {
+  if (!url) return null;
+  const yt = url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/)([a-zA-Z0-9_-]+)/);
+  if (yt) return `https://www.youtube.com/embed/${yt[1]}?autoplay=1&rel=0`;
+  const vm = url.match(/vimeo\.com\/(\d+)/);
+  if (vm) return `https://player.vimeo.com/video/${vm[1]}?autoplay=1`;
+  return null;
+}
+
+const lightbox   = document.getElementById('video-lightbox');
+const lbIframe   = document.getElementById('lightbox-iframe');
+const lbFrame    = document.getElementById('lightbox-frame');
+const lbNoVideo  = document.getElementById('lightbox-no-video');
+const lbMeta     = document.getElementById('lightbox-meta');
+const lbClose    = document.getElementById('lightbox-close');
+
+function openLightbox(film) {
+  const embedUrl = getEmbedUrl(film.videoUrl);
+  const titleBits = [film.titleMain, film.titleItalic].filter(v => !isBlank(v)).join(' ');
+  const metaBits  = [titleBits, film.type, film.year].filter(v => !isBlank(v));
+  lbMeta.textContent = metaBits.join('  ·  ');
+  if (embedUrl) {
+    lbIframe.src = embedUrl;
+    lbFrame.style.display = 'block';
+    lbNoVideo.style.display = 'none';
+  } else {
+    lbIframe.src = '';
+    lbFrame.style.display = 'none';
+    lbNoVideo.style.display = 'block';
+  }
+  lightbox.style.display = 'flex';
+  document.body.style.overflow = 'hidden';
+}
+
+function closeLightbox() {
+  lightbox.style.display = 'none';
+  lbIframe.src = '';
+  document.body.style.overflow = '';
+}
+
+lbClose.addEventListener('click', closeLightbox);
+lightbox.addEventListener('click', e => { if (e.target === lightbox) closeLightbox(); });
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closeLightbox(); });
+
+// Attach click to film cards after render
+(data.films || []).forEach((film, i) => {
+  const cards = document.querySelectorAll('.film-card');
+  if (cards[i]) {
+    cards[i].style.cursor = 'pointer';
+    cards[i].addEventListener('click', () => openLightbox(film));
+  }
+});
+
+// ── RENDER AWARDS ────────────────────────────────
+const awardsGrid = document.getElementById('awards-grid');
+const awardsSection = document.getElementById('awards');
+if (!data.awards || data.awards.length === 0) {
+  if (awardsSection) awardsSection.style.display = 'none';
+} else if (awardsGrid) {
+  data.awards.forEach((a, i) => {
+    const item = document.createElement('div');
+    item.className = 'award-item reveal-el';
+    item.style.transitionDelay = `${i * 0.08}s`;
+
+    const parts = [];
+    if (!isBlank(a.image))    parts.push(`<img class="award-image" src="${a.image}" alt="${a.title || a.festival || 'Award'}">`);
+    if (!isBlank(a.festival)) parts.push(`<div class="award-festival">${a.festival}</div>`);
+    if (!isBlank(a.title))    parts.push(`<div class="award-title">${a.title}</div>`);
+    if (!isBlank(a.year))     parts.push(`<div class="award-year">${a.year}</div>`);
+
+    if (parts.length === 0) return; // nothing to show, skip the item
+    item.innerHTML = parts.join('');
+    awardsGrid.appendChild(item);
+  });
+  // If after filtering, no items got added, hide the section
+  if (awardsGrid.children.length === 0 && awardsSection) {
+    awardsSection.style.display = 'none';
+  }
+}
+
+// ── HERO REEL BUTTON ──────────────────────────────
+const heroReelBtn = document.getElementById('hero-reel-btn');
+if (data.info.showreelUrl) {
+  heroReelBtn.style.display = 'inline-flex';
+  heroReelBtn.addEventListener('click', () => {
+    const fakeFilm = { titleMain: 'Showreel', titleItalic: '', type: 'Reel', year: new Date().getFullYear(), videoUrl: data.info.showreelUrl };
+    openLightbox(fakeFilm);
+  });
+} else {
+  heroReelBtn.style.display = 'none';
+}
+
+// ── DARK / LIGHT MODE ─────────────────────────────
+const modeBtn = document.getElementById('mode-toggle');
+let isDark = localStorage.getItem('ll_mode') !== 'light';
+function applyMode() {
+  document.body.classList.toggle('light', !isDark);
+  modeBtn.textContent = isDark ? 'Light' : 'Dark';
+  localStorage.setItem('ll_mode', isDark ? 'dark' : 'light');
+}
+applyMode();
+modeBtn.addEventListener('click', () => { isDark = !isDark; applyMode(); });
+
+// ── PHOTO LIGHTBOX ────────────────────────────────
+const plb = document.getElementById('photo-lightbox');
+const plbImg = document.getElementById('plb-img');
+const plbPlaceholder = document.getElementById('plb-placeholder');
+const plbCaption = document.getElementById('plb-caption');
+let plbIndex = 0;
+
+function openPhotoLightbox(idx) {
+  plbIndex = idx;
+  showPlbPhoto();
+  plb.style.display = 'flex';
+  document.body.style.overflow = 'hidden';
+}
+function showPlbPhoto() {
+  const photo = data.photos[plbIndex];
+  if (photo.src) {
+    plbImg.src = photo.src; plbImg.style.display = 'block';
+    plbPlaceholder.style.display = 'none';
+  } else {
+    plbImg.style.display = 'none';
+    plbPlaceholder.textContent = photo.title || '';
+    plbPlaceholder.style.display = 'flex';
+  }
+  const captionParts = [];
+  if (!isBlank(photo.title))    captionParts.push(photo.title);
+  if (!isBlank(photo.location)) captionParts.push(photo.location);
+  captionParts.push(`${plbIndex + 1} / ${data.photos.length}`);
+  plbCaption.textContent = captionParts.join('  ·  ');
+}
+function closePlb() { plb.style.display = 'none'; document.body.style.overflow = ''; }
+
+document.getElementById('plb-close').addEventListener('click', closePlb);
+document.getElementById('plb-prev').addEventListener('click', () => { plbIndex = (plbIndex - 1 + data.photos.length) % data.photos.length; showPlbPhoto(); });
+document.getElementById('plb-next').addEventListener('click', () => { plbIndex = (plbIndex + 1) % data.photos.length; showPlbPhoto(); });
+plb.addEventListener('click', e => { if (e.target === plb) closePlb(); });
+document.addEventListener('keydown', e => {
+  if (plb.style.display === 'flex') {
+    if (e.key === 'ArrowLeft') { plbIndex = (plbIndex - 1 + data.photos.length) % data.photos.length; showPlbPhoto(); }
+    if (e.key === 'ArrowRight') { plbIndex = (plbIndex + 1) % data.photos.length; showPlbPhoto(); }
+  }
+});
+
+// Attach click to photo items
+document.querySelectorAll('.photo-item').forEach((el, i) => {
+  el.addEventListener('click', () => openPhotoLightbox(i));
+});
+
+// ── CONTACT FORM ──────────────────────────────────
+document.getElementById('contact-form').addEventListener('submit', e => {
+  e.preventDefault();
+  const fd = new FormData(e.target);
+  const name = fd.get('name'), email = fd.get('email'), msg = fd.get('message');
+  const mailto = `mailto:${data.info.email}?subject=Portfolio enquiry from ${encodeURIComponent(name)}&body=${encodeURIComponent(`From: ${name}\nEmail: ${email}\n\n${msg}`)}`;
+  window.location.href = mailto;
+  document.getElementById('cf-sent').style.display = 'inline-block';
+  e.target.reset();
+});
+
+// ── MOBILE NAV ──────────────────────────────────
+const menuBtn = document.getElementById('nav-menu-btn');
+const mobileOverlay = document.getElementById('nav-mobile-overlay');
+menuBtn.addEventListener('click', () => {
+  menuBtn.classList.toggle('open');
+  mobileOverlay.classList.toggle('open');
+});
+function closeMobileNav() {
+  menuBtn.classList.remove('open');
+  mobileOverlay.classList.remove('open');
+}
+
+// ── CURSOR ──────────────────────────────────────
+const cursor = document.getElementById('cursor');
+document.addEventListener('mousemove', e => { cursor.style.left = e.clientX + 'px'; cursor.style.top = e.clientY + 'px'; });
+document.querySelectorAll('a, button, .film-card, .photo-item').forEach(el => {
+  el.addEventListener('mouseenter', () => cursor.classList.add('big'));
+  el.addEventListener('mouseleave', () => cursor.classList.remove('big'));
+});
+
+// ── SCROLL REVEAL ───────────────────────────────
+const observer = new IntersectionObserver(entries => {
+  entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add('in-view'); observer.unobserve(e.target); } });
+}, { threshold: 0.1 });
+document.querySelectorAll('.reveal-el').forEach(el => observer.observe(el));
+
+const panel = document.getElementById('tweaks-panel');
+window.addEventListener('message', e => {
+  if (e.data?.type === '__activate_edit_mode') panel.classList.add('visible');
+  else if (e.data?.type === '__deactivate_edit_mode') panel.classList.remove('visible');
+});
+window.parent.postMessage({ type: '__edit_mode_available' }, '*');
+document.getElementById('tp-close-btn').addEventListener('click', () => {
+  panel.classList.remove('visible');
+  window.parent.postMessage({ type: '__edit_mode_dismissed' }, '*');
+});
+document.querySelectorAll('[data-cols]').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('[data-cols]').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    document.documentElement.style.setProperty('--photo-cols', btn.dataset.cols);
+  });
+});
+document.querySelectorAll('[data-accent]').forEach(swatch => {
+  swatch.addEventListener('click', () => {
+    document.querySelectorAll('[data-accent]').forEach(s => s.classList.remove('active'));
+    swatch.classList.add('active');
+    document.documentElement.style.setProperty('--accent', swatch.dataset.accent);
+  });
+});
+
+// ── RENUMBER VISIBLE SECTIONS ─────────────────────
+// Recompute "01 / 04" style counters based on which sections are actually visible.
+(() => {
+  const numbered = Array.from(document.querySelectorAll('section'))
+    .filter(s => s.querySelector('.section-num'))
+    .filter(s => s.style.display !== 'none');
+  const total = numbered.length;
+  numbered.forEach((s, i) => {
+    const numEl = s.querySelector('.section-num');
+    const idx = String(i + 1).padStart(2, '0');
+    const tot = String(total).padStart(2, '0');
+    numEl.textContent = `${idx} / ${tot}`;
+  });
+})();
+})();
+</script>
+</body>
+</html>
